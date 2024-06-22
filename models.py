@@ -1,3 +1,4 @@
+# models.py
 from datetime import datetime
 from flask_sqlalchemy import SQLAlchemy
 
@@ -20,7 +21,6 @@ class Category(db.Model):
     category_id = db.Column(db.Integer, primary_key=True)
     category_name = db.Column(db.String(50), unique=True, nullable=False)
 
-    # Define the relationship with Material
     materials = db.relationship(
         "Material", back_populates="category", cascade="all, delete-orphan"
     )
@@ -43,7 +43,6 @@ class Material(db.Model):
     )
     description = db.Column(db.String(255), nullable=True)
 
-    # Define the relationship with Category
     category = db.relationship("Category", back_populates="materials")
 
     def __repr__(self):
