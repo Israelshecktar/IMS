@@ -44,6 +44,13 @@ def get_inventory():
     ]
     return jsonify(inventory_list)
 
+# Route to get the names of HEMPEL products in stock
+@app.route("/hempel_products", methods=["GET"])
+def get_hempel_products():
+    hempel_products = Inventory.query.with_entities(Inventory.product_name).all()
+    product_names = [product.product_name for product in hempel_products]
+    return jsonify(product_names)
+
 # Initialize the database
 with app.app_context():
     db.create_all()

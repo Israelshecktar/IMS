@@ -164,3 +164,4 @@ cython_debug/
 # utility scripts
 categories.py
 config.py
+hempel.csv
