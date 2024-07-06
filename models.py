@@ -3,7 +3,6 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 db = SQLAlchemy()
 
-
 # Define the User model
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -18,34 +17,11 @@ class User(db.Model):
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
 
-
-# Define the Category model
-class Category(db.Model):
+# Define the Inventory model
+class Inventory(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
-    description = db.Column(db.Text)
-
-
-# Define the RawMaterials model
-class RawMaterials(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    category_id = db.Column(db.Integer, db.ForeignKey("category.id"), nullable=False)
-    name = db.Column(db.String(100), nullable=False)
-    quantity = db.Column(db.Float, nullable=False)
-    unit = db.Column(db.String(50), nullable=False)
-    price_per_unit = db.Column(db.Float, nullable=False)
-    supplier = db.Column(db.String(100))
-    received_date = db.Column(db.Date, nullable=False)
-    expiry_date = db.Column(db.Date)
-
-
-# Define the PackagingMaterials model
-class PackagingMaterials(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    category_id = db.Column(db.Integer, db.ForeignKey("category.id"), nullable=False)
-    name = db.Column(db.String(100), nullable=False)
-    quantity = db.Column(db.Float, nullable=False)
-    unit = db.Column(db.String(50), nullable=False)
-    price_per_unit = db.Column(db.Float, nullable=False)
-    supplier = db.Column(db.String(100))
-    received_date = db.Column(db.Date, nullable=False)
+    product_name = db.Column(db.String(255), nullable=False)
+    total_litres = db.Column(db.Numeric(10, 2), nullable=False)
+    date_received = db.Column(db.Date, nullable=False)
+    best_before_date = db.Column(db.Date, nullable=False)
+    location = db.Column(db.String(255), nullable=False)

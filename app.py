@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify
-from models import db, RawMaterials
+from models import db, Inventory
 from config import SQLALCHEMY_DATABASE_URI
 
 app = Flask(__name__)
@@ -10,59 +10,43 @@ db.init_app(app)
 # Home Route
 @app.route('/')
 def home():
-    return ('Hello Shecktar!, your app is running and connected to the inventory db')
+    return 'Hello Shecktar!, your app is running and connected to the stockguard db'
 
-
-# Route to add a raw material
-@app.route("/add_raw_material", methods=["POST"])
-def add_raw_material():
-    # Extract data from the request
+# Route to add an inventory item
+@app.route("/add_inventory", methods=["POST"])
+def add_inventory():
     data = request.get_json()
-
-    # Create a new RawMaterials instance
-    new_material = RawMaterials(
-        category_id=data["category_id"],
-        name=data["name"],
-        quantity=data["quantity"],
-        unit=data["unit"],
-        price_per_unit=data["price_per_unit"],
-        supplier=data["supplier"],
-        received_date=data["received_date"],
+    new_inventory = Inventory(
+        product_name=data["product_name"],
+        total_litres=data["total_litres"],
+        date_received=data["date_received"],
+        best_before_date=data["best_before_date"],
+        location=data["location"]
     )
-
-    # Add the new material to the session and commit to the database
-    db.session.add(new_material)
+    db.session.add(new_inventory)
     db.session.commit()
+    return jsonify({"message": "Inventory item added successfully"}), 201
 
-    return jsonify({"message": "Raw material added successfully"}), 201
-
-
-@app.route("/raw_materials", methods=["GET"])
-def get_raw_materials():
-    # Query the database for all raw materials
-    raw_materials = RawMaterials.query.all()
-
-    # Convert the raw materials to a list of dictionaries to jsonify
-    raw_materials_list = [
+# Route to get all inventory items
+@app.route("/inventory", methods=["GET"])
+def get_inventory():
+    inventory_items = Inventory.query.all()
+    inventory_list = [
         {
-            "id": material.id,
-            "category_id": material.category_id,
-            "name": material.name,
-            "quantity": material.quantity,
-            "unit": material.unit,
-            "price_per_unit": material.price_per_unit,
-            "supplier": material.supplier,
-            "received_date": material.received_date.isoformat(),
-            "expiry_date": (
-                material.expiry_date.isoformat() if material.expiry_date else None
-            ),
+            "id": item.id,
+            "product_name": item.product_name,
+            "total_litres": item.total_litres,
+            "date_received": item.date_received.isoformat(),
+            "best_before_date": item.best_before_date.isoformat(),
+            "location": item.location
         }
-        for material in raw_materials
+        for item in inventory_items
     ]
+    return jsonify(inventory_list)
 
-    # Return the list as a JSON response
-    return jsonify(raw_materials_list)
-
+# Initialize the database
+with app.app_context():
+    db.create_all()
 
 # Run the Flask app
 if __name__ == "__main__":
