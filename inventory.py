@@ -3,8 +3,8 @@ from datetime import date
 from models import db, Inventory
 from app import app
 
-# Read the CSV file, specifying the header row
-df = pd.read_csv('hempel.csv', header=1)
+# Read the CSV file, specifying the correct header row
+df = pd.read_csv('hempel.csv', header=0)
 
 # Define the current date and best before date
 current_date = date.today()
@@ -15,6 +15,7 @@ def insert_data():
     with app.app_context():
         for index, row in df.iterrows():
             inventory_item = Inventory(
+                material=row['Material'],
                 product_name=row['Material description'],
                 total_litres=row['Physical'],
                 date_received=current_date,

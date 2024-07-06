@@ -17,6 +17,7 @@ def home():
 def add_inventory():
     data = request.get_json()
     new_inventory = Inventory(
+        material=data["material"],
         product_name=data["product_name"],
         total_litres=data["total_litres"],
         date_received=data["date_received"],
@@ -34,6 +35,7 @@ def get_inventory():
     inventory_list = [
         {
             "id": item.id,
+            "material": item.material,
             "product_name": item.product_name,
             "total_litres": item.total_litres,
             "date_received": item.date_received.isoformat(),

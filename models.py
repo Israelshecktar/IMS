@@ -20,6 +20,7 @@ class User(db.Model):
 # Define the Inventory model
 class Inventory(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    material = db.Column(db.Numeric(15), unique=True, nullable=False)
     product_name = db.Column(db.String(255), nullable=False)
     total_litres = db.Column(db.Numeric(10, 2), nullable=False)
     date_received = db.Column(db.Date, nullable=False)
