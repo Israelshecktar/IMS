@@ -3,6 +3,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 db = SQLAlchemy()
 
+
 # Define the User model
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -16,6 +17,7 @@ class User(db.Model):
 
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
+
 
 # Define the Inventory model
 class Inventory(db.Model):
