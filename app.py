@@ -19,6 +19,8 @@ from flask_jwt_extended import (
     get_jwt_identity,
 )
 from flask_mail import Mail, Message
+from apscheduler.schedulers.background import BackgroundScheduler
+from datetime import datetime, timedelta
 
 app = Flask(__name__)
 
@@ -57,7 +59,7 @@ def admin_required(fn):
     return wrapper
 
 
-# Route to add an inventory item
+# Inventory Management Routes
 @app.route("/add_inventory", methods=["POST"])
 @admin_required
 def add_inventory():
@@ -80,11 +82,30 @@ def add_inventory():
         return jsonify({"error": str(e)}), 500
 
 
-# Route to get all inventory items
 @app.route("/inventory", methods=["GET"])
 @jwt_required()
 def get_inventory():
-    inventory_items = Inventory.query.all()
+    query = Inventory.query
+
+    # Search and filter parameters
+    material = request.args.get("material")
+    product_name = request.args.get("product_name")
+    location = request.args.get("location")
+
+    if material:
+        query = query.filter(Inventory.material.ilike(f"%{material}%"))
+    if product_name:
+        query = query.filter(Inventory.product_name.ilike(f"%{product_name}%"))
+    if location:
+        query = query.filter(Inventory.location.ilike(f"%{location}%"))
+
+    # Pagination parameters
+    page = request.args.get("page", 1, type=int)
+    per_page = request.args.get("per_page", 10, type=int)
+
+    pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+    inventory_items = pagination.items
+
     inventory_list = [
         {
             "id": item.id,
@@ -97,10 +118,18 @@ def get_inventory():
         }
         for item in inventory_items
     ]
-    return jsonify(inventory_list)
+
+    return jsonify(
+        {
+            "items": inventory_list,
+            "total": pagination.total,
+            "pages": pagination.pages,
+            "current_page": pagination.page,
+            "per_page": pagination.per_page,
+        }
+    )
 
 
-# Route to get the names of HEMPEL products in stock
 @app.route("/hempel_products", methods=["GET"])
 @jwt_required()
 def get_hempel_products():
@@ -144,7 +173,51 @@ def delete_inventory(id):
     return jsonify({"message": "Inventory item deleted successfully"}), 200
 
 
-# Route to register a new user
+@app.route("/inventory/below_threshold", methods=["GET"])
+@jwt_required()
+def get_inventory_below_threshold():
+    threshold = 50
+    low_inventory_items = Inventory.query.filter(
+        Inventory.total_litres <= threshold
+    ).all()
+    inventory_list = [
+        {
+            "id": item.id,
+            "material": item.material,
+            "product_name": item.product_name,
+            "total_litres": item.total_litres,
+            "date_received": item.date_received.isoformat(),
+            "best_before_date": item.best_before_date.isoformat(),
+            "location": item.location,
+        }
+        for item in low_inventory_items
+    ]
+    return jsonify(inventory_list)
+
+
+@app.route("/inventory/expiring_soon", methods=["GET"])
+@jwt_required()
+def get_inventory_expiring_soon():
+    three_months_from_now = datetime.now() + timedelta(days=90)
+    expiring_items = Inventory.query.filter(
+        Inventory.best_before_date <= three_months_from_now
+    ).all()
+    inventory_list = [
+        {
+            "id": item.id,
+            "material": item.material,
+            "product_name": item.product_name,
+            "total_litres": item.total_litres,
+            "date_received": item.date_received.isoformat(),
+            "best_before_date": item.best_before_date.isoformat(),
+            "location": item.location,
+        }
+        for item in expiring_items
+    ]
+    return jsonify(inventory_list)
+
+
+# User Management Routes
 @app.route("/register", methods=["POST"])
 def register():
     data = request.get_json()
@@ -165,30 +238,6 @@ def register():
     mail.send(msg)
 
     return jsonify({"message": "User registered successfully"}), 201
-
-
-@app.route("/update_profile", methods=["PUT"])
-@jwt_required()
-def update_profile():
-    identity = get_jwt_identity()
-    user = User.query.filter_by(username=identity["username"]).first()
-
-    if not user:
-        return jsonify({"message": "User not found"}), 404
-
-    data = request.get_json()
-    user.username = data.get("username", user.username)
-    user.email = data.get("email", user.email)
-    user.role = data.get("role", user.role)
-
-    db.session.commit()
-
-    # Send confirmation email
-    msg = Message("Profile Update Successful", recipients=[user.email])
-    msg.body = f"Hello {user.username},\n\nYour profile has been updated successfully."
-    mail.send(msg)
-
-    return jsonify({"message": "Profile updated successfully"}), 200
 
 
 @app.route("/request_password_reset", methods=["POST"])
@@ -241,6 +290,104 @@ def login():
         return jsonify(access_token=access_token), 200
     return jsonify({"message": "Invalid credentials"}), 401
 
+
+@app.route("/update_profile", methods=["PUT"])
+@jwt_required()
+def update_profile():
+    identity = get_jwt_identity()
+    user = User.query.filter_by(username=identity["username"]).first()
+
+    if not user:
+        return jsonify({"message": "User not found"}), 404
+
+    data = request.get_json()
+    user.username = data.get("username", user.username)
+    user.email = data.get("email", user.email)
+    user.role = data.get("role", user.role)
+
+    db.session.commit()
+
+    # Send confirmation email
+    msg = Message("Profile Update Successful", recipients=[user.email])
+    msg.body = f"Hello {user.username},\n\nYour profile has been updated successfully."
+    mail.send(msg)
+
+    return jsonify({"message": "Profile updated successfully"}), 200
+
+
+# Reporting and Analytics Routes
+@app.route("/report/inventory_levels", methods=["GET"])
+@admin_required
+def inventory_levels_report():
+    inventory_items = Inventory.query.all()
+    report = [
+        {
+            "product_name": item.product_name,
+            "total_litres": item.total_litres,
+            "location": item.location,
+        }
+        for item in inventory_items
+    ]
+    return jsonify(report)
+
+
+@app.route("/report/user_activity", methods=["GET"])
+@admin_required
+def user_activity_report():
+    users = User.query.all()
+    report = [
+        {
+            "username": user.username,
+            "email": user.email,
+            "role": user.role,
+            "last_login": user.last_login.isoformat() if user.last_login else None,
+        }
+        for user in users
+    ]
+    return jsonify(report)
+
+
+# Automated Email Notifications
+def check_inventory_levels():
+    low_inventory_items = Inventory.query.filter(Inventory.total_litres < 50).all()
+    if low_inventory_items:
+        product_list = "\n".join(
+            [
+                f"{item.product_name}: {item.total_litres} liters"
+                for item in low_inventory_items
+            ]
+        )
+        msg = Message("Low Inventory Alert", recipients=[MAIL_USERNAME])
+        msg.body = f"The following products are below the 50 liters threshold:\n\n{product_list}"
+        mail.send(msg)
+
+
+def check_expiring_products():
+    three_months_from_now = datetime.now() + timedelta(days=90)
+    expiring_items = Inventory.query.filter(
+        Inventory.best_before_date <= three_months_from_now
+    ).all()
+    if expiring_items:
+        product_list = "\n".join(
+            [
+                f"{item.product_name}: expires on {item.best_before_date}"
+                for item in expiring_items
+            ]
+        )
+        msg = Message("Expiration Notice", recipients=[MAIL_USERNAME])
+        msg.body = f"The following products are expiring within the next 3 months:\n\n{product_list}"
+        mail.send(msg)
+
+
+# Scheduling the Tasks
+scheduler = BackgroundScheduler()
+scheduler.add_job(
+    func=check_inventory_levels, trigger="interval", hours=24
+)  # Check daily
+scheduler.add_job(
+    func=check_expiring_products, trigger="interval", weeks=1
+)  # Check weekly
+scheduler.start()
 
 # Initialize the database
 with app.app_context():
