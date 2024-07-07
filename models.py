@@ -1,4 +1,5 @@
 from flask_sqlalchemy import SQLAlchemy
+from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
 
 db = SQLAlchemy()
@@ -28,3 +29,13 @@ class Inventory(db.Model):
     date_received = db.Column(db.Date, nullable=False)
     best_before_date = db.Column(db.Date, nullable=False)
     location = db.Column(db.String(255), nullable=False)
+
+
+class InventoryTransaction(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    inventory_id = db.Column(db.Integer, db.ForeignKey("inventory.id"), nullable=False)
+    quantity_taken = db.Column(db.Numeric(10, 2), nullable=False)
+    date_taken = db.Column(db.DateTime, default=datetime.utcnow)
+    inventory = db.relationship(
+        "Inventory", backref=db.backref("transactions", lazy=True)
+    )

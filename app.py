@@ -1,5 +1,7 @@
-from flask import Flask, request, jsonify, url_for
-from models import db, Inventory, User
+from flask import Flask, request, jsonify, url_for, send_file
+import io
+import pandas as pd
+from models import db, Inventory, User, InventoryTransaction
 from functools import wraps
 from itsdangerous import URLSafeTimedSerializer
 from config import (
@@ -82,6 +84,43 @@ def add_inventory():
         return jsonify({"error": str(e)}), 500
 
 
+@app.route("/take_inventory", methods=["POST"])
+@jwt_required()
+def take_inventory():
+    data = request.get_json()
+    inventory_item = Inventory.query.get(data["id"])
+
+    if not inventory_item:
+        return jsonify({"message": "Inventory item not found"}), 404
+
+    quantity_to_take = data.get("quantity", 0)
+
+    if quantity_to_take <= 0:
+        return jsonify({"message": "Invalid quantity"}), 400
+
+    if inventory_item.total_litres < quantity_to_take:
+        return jsonify({"message": "Insufficient inventory"}), 400
+
+    inventory_item.total_litres -= quantity_to_take
+
+    # Log the transaction
+    transaction = InventoryTransaction(
+        inventory_id=inventory_item.id, quantity_taken=quantity_to_take
+    )
+    db.session.add(transaction)
+    db.session.commit()
+
+    return (
+        jsonify(
+            {
+                "message": "Inventory updated successfully",
+                "remaining_quantity": inventory_item.total_litres,
+            }
+        ),
+        200,
+    )
+
+
 @app.route("/inventory", methods=["GET"])
 @jwt_required()
 def get_inventory():
@@ -128,14 +167,6 @@ def get_inventory():
             "per_page": pagination.per_page,
         }
     )
-
-
-@app.route("/hempel_products", methods=["GET"])
-@jwt_required()
-def get_hempel_products():
-    hempel_products = Inventory.query.with_entities(Inventory.product_name).all()
-    product_names = [product.product_name for product in hempel_products]
-    return jsonify(product_names)
 
 
 @app.route("/update_inventory/<int:id>", methods=["PUT"])
@@ -192,6 +223,23 @@ def get_inventory_below_threshold():
         }
         for item in low_inventory_items
     ]
+
+    if request.args.get("download") == "true":
+        # Create a DataFrame
+        df = pd.DataFrame(inventory_list)
+
+        # Save to a BytesIO object
+        output = io.BytesIO()
+        with pd.ExcelWriter(output, engine="openpyxl") as writer:
+            df.to_excel(writer, index=False, sheet_name="Low Inventory")
+        output.seek(0)
+
+        return send_file(
+            output,
+            as_attachment=True,
+            download_name="low_inventory_report.xlsx",
+        )
+
     return jsonify(inventory_list)
 
 
@@ -214,6 +262,23 @@ def get_inventory_expiring_soon():
         }
         for item in expiring_items
     ]
+
+    if request.args.get("download") == "true":
+        # Create a DataFrame
+        df = pd.DataFrame(inventory_list)
+
+        # Save to a BytesIO object
+        output = io.BytesIO()
+        with pd.ExcelWriter(output, engine="openpyxl") as writer:
+            df.to_excel(writer, index=False, sheet_name="Expiring Soon")
+        output.seek(0)
+
+        return send_file(
+            output,
+            as_attachment=True,
+            download_name="expiring_soon_report.xlsx",
+        )
+
     return jsonify(inventory_list)
 
 
@@ -328,6 +393,70 @@ def inventory_levels_report():
         }
         for item in inventory_items
     ]
+
+    if request.args.get("download") == "true":
+        # Create a DataFrame
+        df = pd.DataFrame(report)
+
+        # Save to a BytesIO object
+        output = io.BytesIO()
+        with pd.ExcelWriter(output, engine="openpyxl") as writer:
+            df.to_excel(writer, index=False, sheet_name="Inventory Levels")
+        output.seek(0)
+
+        return send_file(
+            output, as_attachment=True, download_name="inventory_levels_report.xlsx"
+        )
+
+    return jsonify(report)
+
+
+@app.route("/report/inventory_taken", methods=["GET"])
+@admin_required
+def inventory_taken_report():
+    start_date = request.args.get("start_date")
+    end_date = request.args.get("end_date")
+
+    if not start_date or not end_date:
+        return jsonify({"message": "Please provide both start_date and end_date"}), 400
+
+    try:
+        start_date = datetime.strptime(start_date, "%Y-%m-%d")
+        end_date = datetime.strptime(end_date, "%Y-%m-%d")
+    except ValueError:
+        return jsonify({"message": "Invalid date format. Use YYYY-MM-DD"}), 400
+
+    transactions = InventoryTransaction.query.filter(
+        InventoryTransaction.date_taken >= start_date,
+        InventoryTransaction.date_taken <= end_date,
+    ).all()
+
+    report = [
+        {
+            "inventory_id": transaction.inventory_id,
+            "product_name": transaction.inventory.product_name,
+            "quantity_taken": transaction.quantity_taken,
+            "date_taken": transaction.date_taken.isoformat(),
+        }
+        for transaction in transactions
+    ]
+
+    if request.args.get("download") == "true":
+        # Create a DataFrame
+        df = pd.DataFrame(report)
+
+        # Save to a BytesIO object
+        output = io.BytesIO()
+        with pd.ExcelWriter(output, engine="openpyxl") as writer:
+            df.to_excel(writer, index=False, sheet_name="Inventory Taken")
+        output.seek(0)
+
+        return send_file(
+            output,
+            as_attachment=True,
+            download_name="inventory_taken_report.xlsx",
+        )
+
     return jsonify(report)
 
 
