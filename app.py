@@ -1,7 +1,6 @@
-from flask import Flask, request, jsonify, url_for
+from flask import Flask, request, jsonify
 from models import db, Inventory, User
 from functools import wraps
-from itsdangerous import URLSafeTimedSerializer
 from config import (
     SQLALCHEMY_DATABASE_URI,
     JWT_SECRET_KEY,
@@ -30,7 +29,6 @@ app.config["MAIL_DEFAULT_SENDER"] = MAIL_DEFAULT_SENDER
 mail = Mail(app)
 jwt = JWTManager(app)
 db.init_app(app)
-serializer = URLSafeTimedSerializer(app.config['JWT_SECRET_KEY'])
 
 # Home Route
 @app.route("/")
@@ -151,19 +149,6 @@ def register():
     mail.send(msg)
 
     return jsonify({"message": "User registered successfully"}), 201
-
-@app.route("/confirm_email/<token>", methods=["GET"])
-def confirm_email(token):
-    try:
-        email = serializer.loads(token, salt='email-confirmation-salt', max_age=3600)
-    except:
-        return jsonify({"message": "The confirmation link is invalid or has expired."}), 400
-
-    user = User.query.filter_by(email=email).first_or_404()
-    user.email_confirmed = True
-    db.session.commit()
-
-    return jsonify({"message": "Email confirmed successfully!"}), 200
 
 @app.route("/login", methods=["POST"])
 def login():
