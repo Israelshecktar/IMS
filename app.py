@@ -1,5 +1,7 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, url_for
 from models import db, Inventory, User
+from functools import wraps
+from itsdangerous import URLSafeTimedSerializer
 from config import (
     SQLALCHEMY_DATABASE_URI,
     JWT_SECRET_KEY,
@@ -10,7 +12,7 @@ from config import (
     MAIL_PASSWORD,
     MAIL_DEFAULT_SENDER,
 )
-from flask_jwt_extended import JWTManager, create_access_token
+from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 from flask_mail import Mail, Message
 
 app = Flask(__name__)
@@ -28,16 +30,27 @@ app.config["MAIL_DEFAULT_SENDER"] = MAIL_DEFAULT_SENDER
 mail = Mail(app)
 jwt = JWTManager(app)
 db.init_app(app)
-
+serializer = URLSafeTimedSerializer(app.config['JWT_SECRET_KEY'])
 
 # Home Route
 @app.route("/")
 def home():
     return "Hello Shecktar!, your app is running and connected to the stockguard db"
 
+# Role-based access control decorator
+def admin_required(fn):
+    @wraps(fn)
+    @jwt_required()
+    def wrapper(*args, **kwargs):
+        identity = get_jwt_identity()
+        if identity['role'] != 'admin':
+            return jsonify({"message": "Admins only!"}), 403
+        return fn(*args, **kwargs)
+    return wrapper
 
 # Route to add an inventory item
 @app.route("/add_inventory", methods=["POST"])
+@admin_required
 def add_inventory():
     data = request.get_json()
     try:
@@ -57,9 +70,9 @@ def add_inventory():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-
 # Route to get all inventory items
 @app.route("/inventory", methods=["GET"])
+@jwt_required()
 def get_inventory():
     inventory_items = Inventory.query.all()
     inventory_list = [
@@ -76,16 +89,16 @@ def get_inventory():
     ]
     return jsonify(inventory_list)
 
-
 # Route to get the names of HEMPEL products in stock
 @app.route("/hempel_products", methods=["GET"])
+@jwt_required()
 def get_hempel_products():
     hempel_products = Inventory.query.with_entities(Inventory.product_name).all()
     product_names = [product.product_name for product in hempel_products]
     return jsonify(product_names)
 
-
 @app.route("/update_inventory/<int:id>", methods=["PUT"])
+@admin_required
 def update_inventory(id):
     data = request.get_json()
     inventory_item = Inventory.query.get(id)
@@ -106,8 +119,8 @@ def update_inventory(id):
     db.session.commit()
     return jsonify({"message": "Inventory item updated successfully"}), 200
 
-
 @app.route("/delete_inventory/<int:id>", methods=["DELETE"])
+@admin_required
 def delete_inventory(id):
     inventory_item = Inventory.query.get(id)
     if not inventory_item:
@@ -116,7 +129,6 @@ def delete_inventory(id):
     db.session.delete(inventory_item)
     db.session.commit()
     return jsonify({"message": "Inventory item deleted successfully"}), 200
-
 
 # Route to register a new user
 @app.route("/register", methods=["POST"])
@@ -140,6 +152,18 @@ def register():
 
     return jsonify({"message": "User registered successfully"}), 201
 
+@app.route("/confirm_email/<token>", methods=["GET"])
+def confirm_email(token):
+    try:
+        email = serializer.loads(token, salt='email-confirmation-salt', max_age=3600)
+    except:
+        return jsonify({"message": "The confirmation link is invalid or has expired."}), 400
+
+    user = User.query.filter_by(email=email).first_or_404()
+    user.email_confirmed = True
+    db.session.commit()
+
+    return jsonify({"message": "Email confirmed successfully!"}), 200
 
 @app.route("/login", methods=["POST"])
 def login():
@@ -152,11 +176,10 @@ def login():
         return jsonify(access_token=access_token), 200
     return jsonify({"message": "Invalid credentials"}), 401
 
-
 # Initialize the database
 with app.app_context():
     db.create_all()
 
 # Run the Flask app
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=True)
