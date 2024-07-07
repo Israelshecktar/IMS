@@ -1,6 +1,7 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, url_for
 from models import db, Inventory, User
 from functools import wraps
+from itsdangerous import URLSafeTimedSerializer
 from config import (
     SQLALCHEMY_DATABASE_URI,
     JWT_SECRET_KEY,
@@ -11,7 +12,12 @@ from config import (
     MAIL_PASSWORD,
     MAIL_DEFAULT_SENDER,
 )
-from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
+from flask_jwt_extended import (
+    JWTManager,
+    create_access_token,
+    jwt_required,
+    get_jwt_identity,
+)
 from flask_mail import Mail, Message
 
 app = Flask(__name__)
@@ -29,11 +35,14 @@ app.config["MAIL_DEFAULT_SENDER"] = MAIL_DEFAULT_SENDER
 mail = Mail(app)
 jwt = JWTManager(app)
 db.init_app(app)
+serializer = URLSafeTimedSerializer(app.config["JWT_SECRET_KEY"])
+
 
 # Home Route
 @app.route("/")
 def home():
     return "Hello Shecktar!, your app is running and connected to the stockguard db"
+
 
 # Role-based access control decorator
 def admin_required(fn):
@@ -41,10 +50,12 @@ def admin_required(fn):
     @jwt_required()
     def wrapper(*args, **kwargs):
         identity = get_jwt_identity()
-        if identity['role'] != 'admin':
+        if identity["role"] != "admin":
             return jsonify({"message": "Admins only!"}), 403
         return fn(*args, **kwargs)
+
     return wrapper
+
 
 # Route to add an inventory item
 @app.route("/add_inventory", methods=["POST"])
@@ -68,6 +79,7 @@ def add_inventory():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+
 # Route to get all inventory items
 @app.route("/inventory", methods=["GET"])
 @jwt_required()
@@ -87,6 +99,7 @@ def get_inventory():
     ]
     return jsonify(inventory_list)
 
+
 # Route to get the names of HEMPEL products in stock
 @app.route("/hempel_products", methods=["GET"])
 @jwt_required()
@@ -94,6 +107,7 @@ def get_hempel_products():
     hempel_products = Inventory.query.with_entities(Inventory.product_name).all()
     product_names = [product.product_name for product in hempel_products]
     return jsonify(product_names)
+
 
 @app.route("/update_inventory/<int:id>", methods=["PUT"])
 @admin_required
@@ -117,6 +131,7 @@ def update_inventory(id):
     db.session.commit()
     return jsonify({"message": "Inventory item updated successfully"}), 200
 
+
 @app.route("/delete_inventory/<int:id>", methods=["DELETE"])
 @admin_required
 def delete_inventory(id):
@@ -127,6 +142,7 @@ def delete_inventory(id):
     db.session.delete(inventory_item)
     db.session.commit()
     return jsonify({"message": "Inventory item deleted successfully"}), 200
+
 
 # Route to register a new user
 @app.route("/register", methods=["POST"])
@@ -150,6 +166,70 @@ def register():
 
     return jsonify({"message": "User registered successfully"}), 201
 
+
+@app.route("/update_profile", methods=["PUT"])
+@jwt_required()
+def update_profile():
+    identity = get_jwt_identity()
+    user = User.query.filter_by(username=identity["username"]).first()
+
+    if not user:
+        return jsonify({"message": "User not found"}), 404
+
+    data = request.get_json()
+    user.username = data.get("username", user.username)
+    user.email = data.get("email", user.email)
+    user.role = data.get("role", user.role)
+
+    db.session.commit()
+
+    # Send confirmation email
+    msg = Message("Profile Update Successful", recipients=[user.email])
+    msg.body = f"Hello {user.username},\n\nYour profile has been updated successfully."
+    mail.send(msg)
+
+    return jsonify({"message": "Profile updated successfully"}), 200
+
+
+@app.route("/request_password_reset", methods=["POST"])
+def request_password_reset():
+    data = request.get_json()
+    user = User.query.filter_by(email=data["email"]).first()
+
+    if not user:
+        return jsonify({"message": "User not found"}), 404
+
+    token = serializer.dumps(user.email, salt="password-reset-salt")
+    reset_url = url_for("reset_password", token=token, _external=True)
+
+    msg = Message("Password Reset Request", recipients=[user.email])
+    msg.body = f"Hello {user.username},\n\nPlease click the link to reset your password: {reset_url}"
+    mail.send(msg)
+
+    return jsonify({"message": "Password reset link sent to your email"}), 200
+
+
+@app.route("/reset_password/<token>", methods=["POST"])
+def reset_password(token):
+    try:
+        email = serializer.loads(token, salt="password-reset-salt", max_age=3600)
+    except:
+        return jsonify({"message": "The reset link is invalid or has expired."}), 400
+
+    user = User.query.filter_by(email=email).first_or_404()
+    data = request.get_json()
+    user.set_password(data["password"])
+
+    db.session.commit()
+
+    # Send confirmation email
+    msg = Message("Password Reset Successful", recipients=[user.email])
+    msg.body = f"Hello {user.username},\n\nYour password has been reset successfully."
+    mail.send(msg)
+
+    return jsonify({"message": "Password reset successfully"}), 200
+
+
 @app.route("/login", methods=["POST"])
 def login():
     data = request.get_json()
@@ -161,10 +241,11 @@ def login():
         return jsonify(access_token=access_token), 200
     return jsonify({"message": "Invalid credentials"}), 401
 
+
 # Initialize the database
 with app.app_context():
     db.create_all()
 
 # Run the Flask app
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host="0.0.0.0", port=5000, debug=True)
