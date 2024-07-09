@@ -1,3 +1,15 @@
+document.getElementById('showRegisterForm').addEventListener('click', function(event) {
+    event.preventDefault();
+    document.getElementById('loginSection').style.display = 'none';
+    document.getElementById('registerSection').style.display = 'block';
+});
+
+document.getElementById('showLoginForm').addEventListener('click', function(event) {
+    event.preventDefault();
+    document.getElementById('registerSection').style.display = 'none';
+    document.getElementById('loginSection').style.display = 'block';
+});
+
 document.getElementById('loginForm').addEventListener('submit', async function(event) {
     event.preventDefault();
     const username = document.getElementById('username').value;
@@ -39,6 +51,9 @@ document.getElementById('registerForm').addEventListener('submit', async functio
     const data = await response.json();
     if (response.ok) {
         alert('Registration successful!');
+        document.getElementById('registerForm').reset();
+        document.getElementById('registerSection').style.display = 'none';
+        document.getElementById('loginSection').style.display = 'block';
     } else {
         alert('Registration failed: ' + data.message);
     }
