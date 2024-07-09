@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block title %}Login and Register{% endblock %}
+
+{% block content %}
+<div class="columns">
+    <div class="column is-half">
+        <h2 class="title">Login</h2>
+        <form id="loginForm">
+            <div class="field">
+                <label class="label" for="username">Username:</label>
+                <div class="control">
+                    <input class="input" type="text" id="username" name="username" required>
+                </div>
+            </div>
+            <div class="field">
+                <label class="label" for="password">Password:</label>
+                <div class="control">
+                    <input class="input" type="password" id="password" name="password" required>
+                </div>
+            </div>
+            <div class="control">
+                <button class="button is-primary" type="submit">Login</button>
+            </div>
+        </form>
+    </div>
+    <div class="column is-half">
+        <h2 class="title">Register</h2>
+        <form id="registerForm">
+            <div class="field">
+                <label class="label" for="reg_username">Username:</label>
+                <div class="control">
+                    <input class="input" type="text" id="reg_username" name="username" required>
+                </div>
+            </div>
+            <div class="field">
+                <label class="label" for="reg_email">Email:</label>
+                <div class="control">
+                    <input class="input" type="email" id="reg_email" name="email" required>
+                </div>
+            </div>
+            <div class="field">
+                <label class="label" for="reg_password">Password:</label>
+                <div class="control">
+                    <input class="input" type="password" id="reg_password" name="password" required>
+                </div>
+            </div>
+            <div class="field">
+                <label class="label" for="reg_role">Role:</label>
+                <div class="control">
+                    <div class="select">
+                        <select id="reg_role" name="role" required>
+                            <option value="admin">Admin</option>
+                            <option value="management">Management</option>
+                            <option value="staff">Staff</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="control">
+                <button class="button is-primary" type="submit">Register</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
