@@ -2,14 +2,32 @@ from flask import Blueprint, request, jsonify, url_for
 from models import db, User
 from itsdangerous import URLSafeTimedSerializer
 from config import JWT_SECRET_KEY, MAIL_USERNAME
-from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
+from flask_jwt_extended import (
+    create_access_token,
+    jwt_required,
+    get_jwt_identity,
+    get_jwt,
+)
 from flask_mail import Mail, Message
+from flask_jwt_extended import JWTManager
 
 auth_bp = Blueprint("auth", __name__)
 
 # Initialize serializer and mail
 serializer = URLSafeTimedSerializer(JWT_SECRET_KEY)
 mail = Mail()
+
+# Initialize JWT manager
+jwt = JWTManager()
+
+# Store revoked tokens
+revoked_tokens = set()
+
+
+@jwt.token_in_blocklist_loader
+def check_if_token_revoked(jwt_header, jwt_payload):
+    jti = jwt_payload["jti"]
+    return jti in revoked_tokens
 
 
 @auth_bp.route("/register", methods=["POST"])
@@ -107,3 +125,11 @@ def update_profile():
     mail.send(msg)
 
     return jsonify({"message": "Profile updated successfully"}), 200
+
+
+@auth_bp.route("/logout", methods=["POST"])
+@jwt_required()
+def logout():
+    jti = get_jwt()["jti"]
+    revoked_tokens.add(jti)
+    return jsonify({"message": "Successfully logged out"}), 200
