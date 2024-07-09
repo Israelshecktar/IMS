@@ -59,19 +59,3 @@ document.getElementById('registerForm').addEventListener('submit', async functio
     }
 });
 
-document.getElementById('fetchInventory').addEventListener('click', async function() {
-    const token = localStorage.getItem('jwtToken');
-    const response = await fetch('/inventory', {
-        headers: {
-            'Authorization': `Bearer ${token}`
-        }
-    });
-
-    const data = await response.json();
-    if (response.ok) {
-        const inventoryData = document.getElementById('inventoryData');
-        inventoryData.innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
-    } else {
-        alert('Failed to fetch inventory: ' + data.message);
-    }
-});
