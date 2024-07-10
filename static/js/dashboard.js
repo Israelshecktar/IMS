@@ -53,4 +53,26 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('deleteInventory').addEventListener('click', function() {
         window.location.href = '/inventory/delete';
     });
+
+    // Search functionality
+    document.getElementById('searchButton').addEventListener('click', async function() {
+        const query = document.getElementById('searchInput').value;
+        const token = localStorage.getItem('jwtToken');
+
+        const response = await fetch(`/inventory?material=${query}&product_name=${query}&location=${query}`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            console.log('Search results:', data.items);
+            // You can update the UI with the search results here
+        } else {
+            const data = await response.json();
+            alert('Search failed: ' + data.message);
+        }
+    });
 });

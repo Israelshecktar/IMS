@@ -29,7 +29,9 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
         alert('Login successful!');
         window.location.href = '/dashboard';
     } else {
-        alert('Login failed: ' + data.message);
+        const loginError = document.getElementById('loginError');
+        loginError.textContent = 'Login failed: ' + data.message;
+        loginError.classList.remove('is-hidden');
     }
 });
 
@@ -55,7 +57,8 @@ document.getElementById('registerForm').addEventListener('submit', async functio
         document.getElementById('registerSection').style.display = 'none';
         document.getElementById('loginSection').style.display = 'block';
     } else {
-        alert('Registration failed: ' + data.message);
+        const registerError = document.getElementById('registerError');
+        registerError.textContent = 'Registration failed: ' + data.message;
+        registerError.classList.remove('is-hidden');
     }
 });
-
