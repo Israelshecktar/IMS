@@ -3,19 +3,27 @@
 {% block title %}Dashboard{% endblock %}
 
 {% block content %}
-<section class="hero is-primary is-small">
-    <div class="hero-body">
-        <div class="container is-flex is-justify-content-space-between is-align-items-center">
-            <div>
-                <h1 class="title">
-                    StockGuard Inventory Management System
-                </h1>
-                <h2 class="subtitle">
-                    Welcome, <span id="username">Username</span>!
-                </h2>
-            </div>
-            <div class="is-flex is-align-items-center">
-                <div class="field has-addons mr-4">
+<nav class="navbar is-primary" role="navigation" aria-label="main navigation">
+    <div class="navbar-brand">
+        <span class="navbar-item">
+            <h1 class="title has-text-white">StockGuard</h1>
+        </span>
+        <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" data-target="navbarBasicExample">
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
+        </a>
+    </div>
+
+    <div id="navbarBasicExample" class="navbar-menu">
+        <div class="navbar-start">
+            <a class="navbar-item" href="/inventory/view">Inventory Management</a>
+            <a class="navbar-item" href="/reports/view">Reports</a>
+        </div>
+
+        <div class="navbar-end">
+            <div class="navbar-item">
+                <div class="field has-addons">
                     <div class="control">
                         <input class="input" type="text" id="searchInput" placeholder="Search inventory...">
                     </div>
@@ -27,6 +35,8 @@
                         </button>
                     </div>
                 </div>
+            </div>
+            <div class="navbar-item">
                 <div class="dropdown is-right is-hoverable">
                     <div class="dropdown-trigger">
                         <button class="button is-primary" aria-haspopup="true" aria-controls="dropdown-menu">
@@ -46,85 +56,147 @@
                     </div>
                 </div>
             </div>
+            <div class="navbar-item">
+                <button class="button is-primary">
+                    <span class="icon is-small">
+                        <i class="fas fa-bell"></i>
+                    </span>
+                </button>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<section class="section">
+    <div class="container">
+        <div class="columns is-multiline">
+            <div class="column is-full-mobile is-half-tablet is-one-quarter-desktop">
+                <div class="card has-background-primary-light">
+                    <header class="card-header">
+                        <p class="card-header-title">
+                            <span class="icon">
+                                <i class="fas fa-boxes"></i>
+                            </span>
+                            Inventory Management
+                        </p>
+                    </header>
+                    <div class="card-content">
+                        <div class="content">
+                            <p>Total Items: 120</p>
+                            <ul>
+                                <li><a href="#" id="viewInventory">View Inventory</a></li>
+                                <li><a href="#" id="addInventory">Add Inventory</a></li>
+                                <li><a href="#" id="updateInventory">Update Inventory</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="column is-full-mobile is-half-tablet is-one-quarter-desktop">
+                <div class="card has-background-warning-light">
+                    <header class="card-header">
+                        <p class="card-header-title">
+                            <span class="icon">
+                                <i class="fas fa-clipboard-check"></i>
+                            </span>
+                            Take Inventory
+                        </p>
+                    </header>
+                    <div class="card-content">
+                        <div class="content">
+                            <p>Pending Tasks: 5</p>
+                            <a href="#" id="takeInventory">Take Inventory</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="column is-full-mobile is-half-tablet is-one-quarter-desktop">
+                <div class="card has-background-success-light">
+                    <header class="card-header">
+                        <p class="card-header-title">
+                            <span class="icon">
+                                <i class="fas fa-chart-line"></i>
+                            </span>
+                            Reports and Analytics
+                        </p>
+                    </header>
+                    <div class="card-content">
+                        <div class="content">
+                            <p>New Reports: 3</p>
+                            <ul>
+                                <li><a href="#" id="viewReports">View Reports</a></li>
+                                <li><a href="#" id="generateReport">Generate Report</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="column is-full-mobile is-half-tablet is-one-quarter-desktop">
+                <div class="card has-background-danger-light">
+                    <header class="card-header">
+                        <p class="card-header-title">
+                            <span class="icon">
+                                <i class="fas fa-trash-alt"></i>
+                            </span>
+                            Delete Inventory
+                        </p>
+                    </header>
+                    <div class="card-content">
+                        <div class="content">
+                            <p>Items to Delete: 2</p>
+                            <a href="#" id="deleteInventory">Delete Inventory</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </section>
 
-<div class="container mt-5">
-    <div class="columns is-multiline">
-        <div class="column is-full-mobile is-half-tablet is-one-quarter-desktop">
-            <div class="card">
-                <header class="card-header">
-                    <p class="card-header-title">
-                        Inventory Management
-                    </p>
-                    <button class="card-header-icon" aria-label="more options">
-                        <span class="icon">
-                            <i class="fas fa-angle-down" aria-hidden="true"></i>
-                        </span>
-                    </button>
-                </header>
-                <div class="card-content">
-                    <div class="content">
-                        <ul>
-                            <li><a href="#" id="viewInventory">View Inventory</a></li>
-                            <li><a href="#" id="addInventory">Add Inventory</a></li>
-                            <li><a href="#" id="updateInventory">Update Inventory</a></li>
-                        </ul>
-                    </div>
-                </div>
+<section class="section">
+    <div class="container">
+        <div class="field is-grouped">
+            <div class="control">
+                <input class="input" type="text" id="filterMaterial" placeholder="Filter by material">
+            </div>
+            <div class="control">
+                <input class="input" type="text" id="filterProductName" placeholder="Filter by product name">
+            </div>
+            <div class="control">
+                <input class="input" type="text" id="filterLocation" placeholder="Filter by location">
+            </div>
+            <div class="control">
+                <button class="button is-primary" id="filterButton">Filter</button>
             </div>
         </div>
-        <div class="column is-full-mobile is-half-tablet is-one-quarter-desktop">
-            <div class="card">
-                <header class="card-header">
-                    <p class="card-header-title">
-                        Take Inventory
-                    </p>
-                </header>
-                <div class="card-content">
-                    <div class="content">
-                        <a href="#" id="takeInventory">Take Inventory</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="column is-full-mobile is-half-tablet is-one-quarter-desktop">
-            <div class="card">
-                <header class="card-header">
-                    <p class="card-header-title">
-                        Reports and Analytics
-                    </p>
-                    <button class="card-header-icon" aria-label="more options">
-                        <span class="icon">
-                            <i class="fas fa-angle-down" aria-hidden="true"></i>
-                        </span>
-                    </button>
-                </header>
-                <div class="card-content">
-                    <div class="content">
-                        <ul>
-                            <li><a href="#" id="viewReports">View Reports</a></li>
-                            <li><a href="#" id="generateReport">Generate Report</a></li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="column is-full-mobile is-half-tablet is-one-quarter-desktop">
-            <div class="card">
-                <header class="card-header">
-                    <p class="card-header-title">
-                        Delete Inventory
-                    </p>
-                </header>
-                <div class="card-content">
-                    <div class="content">
-                        <a href="#" id="deleteInventory">Delete Inventory</a>
-                    </div>
-                </div>
-            </div>
+        <div id="searchResults" class="columns is-multiline">
+            <!-- Search results will be dynamically inserted here -->
         </div>
     </div>
-</div>
+</section>
+
+<section class="section">
+    <div class="container">
+        <h2 class="title">Recent Activities</h2>
+        <div class="box">
+            <p><strong>Patu Nana</strong> added a new item to the inventory.</p>
+            <p><strong>Agbaraojo</strong> updated the stock levels for Product X.</p>
+            <p><strong>Bankole_Admin</strong> deleted an expired item from the inventory.</p>
+        </div>
+    </div>
+</section>
+
+<section class="section">
+    <div class="container">
+        <h2 class="title">Inventory Overview</h2>
+        <div class="box">
+            <canvas id="inventoryChart"></canvas>
+        </div>
+    </div>
+</section>
+
+<!-- Include Chart.js and custom scripts -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+<script src="{{ url_for('static', filename='js/visualizations.js') }}"></script>
 {% endblock %}
