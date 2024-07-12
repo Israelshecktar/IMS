@@ -37,7 +37,7 @@
                 </div>
             </div>
             <div class="navbar-item">
-                <div class="dropdown is-right is-hoverable">
+                <div class="dropdown is-right is-hoverable is-mobile custom-dropdown">
                     <div class="dropdown-trigger">
                         <button class="button is-primary" aria-haspopup="true" aria-controls="dropdown-menu">
                             <span class="icon is-small">
@@ -158,12 +158,15 @@
         <div class="columns">
             <div class="column">
                 <h2 class="title">Expiring Soon</h2>
-                <canvas id="expiringSoonChart"></canvas>
+                <div class="chart-container" style="position: relative; height:300px; width:300px">
+                    <canvas id="expiringSoonChart"></canvas>
+                </div>
+                <a class="button is-primary mt-2" href="/inventory/expiring_soon?download=true">Download Report</a>
             </div>
             <div class="column">
                 <h2 class="title">Products Below Threshold</h2>
                 <canvas id="belowThresholdChart"></canvas>
-                <a class="button is-primary" href="/inventory/below_threshold?download=true">Download Report</a>
+                <a class="button is-primary mt-2" href="/inventory/below_threshold?download=true">Download Report</a>
             </div>
         </div>
     </div>

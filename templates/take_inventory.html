@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block title %}Take Inventory{% endblock %}
+
+{% block content %}
+<section class="section">
+    <div class="container">
+        <h1 class="title">Take Inventory</h1>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="notification is-primary">
+                    {% for category, message in messages %}
+                        <div class="notification is-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <form id="materialForm">
+            <div class="field">
+                <label class="label" for="material">Material Code:</label>
+                <div class="control">
+                    <input class="input" type="text" id="material" name="material" required>
+                </div>
+            </div>
+            <div class="control">
+                <button class="button is-primary" type="button" id="fetchDetails">Fetch Details</button>
+            </div>
+        </form>
+
+        <div id="inventoryDetails" style="display: none;">
+            <h2 class="title">Inventory Details</h2>
+            <p><strong>Product Name:</strong> <span id="productName"></span></p>
+            <p><strong>Total Litres:</strong> <span id="totalLitres"></span></p>
+            <p><strong>Date Received:</strong> <span id="dateReceived"></span></p>
+            <p><strong>Best Before Date:</strong> <span id="bestBeforeDate"></span></p>
+            <p><strong>Location:</strong> <span id="location"></span></p>
+
+            <form method="POST" action="{{ url_for('take_inventory') }}">
+                <input type="hidden" id="materialHidden" name="material">
+                <div class="field">
+                    <label class="label" for="quantity">Quantity to Take:</label>
+                    <div class="control">
+                        <input class="input" type="number" id="quantity" name="quantity" required>
+                    </div>
+                </div>
+                <div class="control">
+                    <button class="button is-primary" type="submit">Take Inventory</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="control mt-4">
+            <a class="button is-link" href="{{ url_for('dashboard') }}">Back to Dashboard</a>
+        </div>
+    </div>
+</section>
+
+<script>
+document.getElementById('fetchDetails').addEventListener('click', function() {
+    const materialCode = document.getElementById('material').value;
+    const formData = new FormData();
+    formData.append('material', materialCode);
+
+    fetch('/get_inventory_details', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            alert(data.error);
+        } else {
+            document.getElementById('productName').textContent = data.product_name;
+            document.getElementById('totalLitres').textContent = data.total_litres;
+            document.getElementById('dateReceived').textContent = data.date_received;
+            document.getElementById('bestBeforeDate').textContent = data.best_before_date;
+            document.getElementById('location').textContent = data.location;
+            document.getElementById('materialHidden').value = materialCode;
+            document.getElementById('inventoryDetails').style.display = 'block';
+        }
+    })
+    .catch(error => console.error('Error:', error));
+});
+</script>
+{% endblock %}

@@ -206,30 +206,48 @@ def add_inventory():
         return redirect(url_for("dashboard"))
     return render_template("add_inventory.html")
 
-
-@app.route("/take_inventory", methods=["POST"])
+@app.route("/take_inventory", methods=["GET", "POST"])
 def take_inventory():
-    inventory_id = request.form["id"]
-    quantity_to_take = int(request.form["quantity"])
-    inventory_item = Inventory.query.get(inventory_id)
+    if request.method == "POST":
+        material_code = request.form["material"]
+        quantity_to_take = int(request.form["quantity"])
+        inventory_item = Inventory.query.filter_by(material=material_code).first()
+
+        if not inventory_item:
+            flash("Inventory item not found", "danger")
+            return redirect(url_for("take_inventory"))
+
+        if quantity_to_take <= 0 or inventory_item.total_litres < quantity_to_take:
+            flash("Invalid or insufficient quantity", "danger")
+            return redirect(url_for("take_inventory"))
+
+        inventory_item.total_litres -= quantity_to_take
+        transaction = InventoryTransaction(
+            inventory_id=inventory_item.id, quantity_taken=quantity_to_take
+        )
+        db.session.add(transaction)
+        db.session.commit()
+
+        flash(f"Successfully took {quantity_to_take} litres. Remaining: {inventory_item.total_litres} litres", "success")
+        return redirect(url_for("take_inventory"))
+
+    return render_template("take_inventory.html")
+
+@app.route("/get_inventory_details", methods=["POST"])
+def get_inventory_details():
+    material_code = request.form["material"]
+    inventory_item = Inventory.query.filter_by(material=material_code).first()
 
     if not inventory_item:
-        return render_template("error.html", message="Inventory item not found")
+        return jsonify({"error": "Inventory item not found"}), 404
 
-    if quantity_to_take <= 0 or inventory_item.total_litres < quantity_to_take:
-        return render_template("error.html", message="Invalid or insufficient quantity")
-
-    inventory_item.total_litres -= quantity_to_take
-    transaction = InventoryTransaction(
-        inventory_id=inventory_item.id, quantity_taken=quantity_to_take
-    )
-    db.session.add(transaction)
-    db.session.commit()
-
-    return render_template(
-        "take_inventory_success.html", remaining_quantity=inventory_item.total_litres
-    )
-
+    return jsonify({
+        "product_name": inventory_item.product_name,
+        "total_litres": inventory_item.total_litres,
+        "date_received": inventory_item.date_received.strftime("%Y-%m-%d"),
+        "best_before_date": inventory_item.best_before_date.strftime("%Y-%m-%d"),
+        "location": inventory_item.location
+    })
 
 @app.route("/inventory", methods=["GET"])
 def get_inventory():
@@ -330,8 +348,6 @@ def get_inventory_below_threshold():
         )
 
     return jsonify(inventory_list)
-
-
 
 @app.route("/inventory/expiring_soon", methods=["GET"])
 def get_inventory_expiring_soon():

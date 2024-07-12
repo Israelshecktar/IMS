@@ -23,16 +23,22 @@ document.addEventListener('DOMContentLoaded', () => {
                         datasets: [{
                             label: 'Total Litres',
                             data: data.map(item => item.total_litres),
-                            backgroundColor: data.map(() => `rgba(${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, 0.2)`),
-                            borderColor: data.map(() => `rgba(${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, 1)`),
-                            borderWidth: 1
+                            backgroundColor: data.map(() => `rgba(${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, 0.6)`),
+                            borderColor: data.map(() => `rgba(0, 0, 0, 0.1)`),
+                            borderWidth: 2
                         }]
                     },
                     options: {
                         responsive: true,
                         plugins: {
                             legend: {
-                                position: 'top',
+                                position: 'right',
+                                labels: {
+                                    font: {
+                                        size: 14
+                                    },
+                                    color: '#333'
+                                }
                             },
                             tooltip: {
                                 callbacks: {
@@ -45,6 +51,15 @@ document.addEventListener('DOMContentLoaded', () => {
                                         return label;
                                     }
                                 }
+                            }
+                        },
+                        animation: {
+                            animateScale: true,
+                            animateRotate: true
+                        },
+                        scales: {
+                            x: {
+                                display: false // Hide x-axis labels
                             }
                         }
                     }
@@ -95,6 +110,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         scales: {
                             y: {
                                 beginAtZero: true
+                            },
+                            x: {
+                                display: false // Hide x-axis labels
                             }
                         }
                     }

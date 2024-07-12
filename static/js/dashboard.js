@@ -31,12 +31,23 @@ document.addEventListener('DOMContentLoaded', () => {
             .catch(error => console.error('Error:', error));
     });
 
-    // Profile Dropdown
-    const profileButton = document.querySelector('.dropdown-trigger button');
-    profileButton.addEventListener('click', () => {
-        const dropdownMenu = document.getElementById('dropdown-menu');
-        dropdownMenu.classList.toggle('is-active');
-    });
+    // Dropdown Functionality
+    const $dropdowns = Array.prototype.slice.call(document.querySelectorAll('.dropdown:not(.is-hoverable)'), 0);
+    if ($dropdowns.length > 0) {
+        $dropdowns.forEach(el => {
+            const trigger = el.querySelector('.dropdown-trigger');
+            trigger.addEventListener('click', event => {
+                event.stopPropagation();
+                el.classList.toggle('is-active');
+            });
+        });
+
+        document.addEventListener('click', event => {
+            $dropdowns.forEach(el => {
+                el.classList.remove('is-active');
+            });
+        });
+    }
 
     // Logout Functionality
     const logoutButton = document.getElementById('logoutButton');
@@ -125,18 +136,5 @@ document.addEventListener('DOMContentLoaded', () => {
     function handleError(error) {
         console.error('Error:', error);
         alert('An error occurred. Please try again.');
-    }
-});
-document.addEventListener('DOMContentLoaded', () => {
-    const $navbarBurgers = Array.prototype.slice.call(document.querySelectorAll('.navbar-burger'), 0);
-    if ($navbarBurgers.length > 0) {
-        $navbarBurgers.forEach(el => {
-            el.addEventListener('click', () => {
-                const target = el.dataset.target;
-                const $target = document.getElementById(target);
-                el.classList.toggle('is-active');
-                $target.classList.toggle('is-active');
-            });
-        });
     }
 });

@@ -69,3 +69,10 @@ body {
         margin-bottom: 20px;
     }
 }
+@media (max-width: 768px) {
+    .custom-dropdown .dropdown-menu {
+        left: 0 !important;
+        right: 0 !important;
+        width: 100% !important;
+    }
+}
