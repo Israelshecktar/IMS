@@ -1,64 +1,81 @@
 document.getElementById('showRegisterForm').addEventListener('click', function(event) {
     event.preventDefault();
-    document.getElementById('loginSection').style.display = 'none';
-    document.getElementById('registerSection').style.display = 'block';
+    window.location.href = '/register';
 });
 
 document.getElementById('showLoginForm').addEventListener('click', function(event) {
     event.preventDefault();
-    document.getElementById('registerSection').style.display = 'none';
-    document.getElementById('loginSection').style.display = 'block';
+    window.location.href = '/login';
 });
 
-document.getElementById('loginForm').addEventListener('submit', async function(event) {
+document.getElementById('register-form').addEventListener('submit', async function(event) {
     event.preventDefault();
-    const username = document.getElementById('username').value;
-    const password = document.getElementById('password').value;
+    const username = document.querySelector('input[name="username"]').value;
+    const email = document.querySelector('input[name="email"]').value;
+    const password = document.querySelector('input[name="password"]').value;
+    const confirmPassword = document.querySelector('input[name="confirm_password"]').value;
+    const role = document.querySelector('select[name="role"]').value;
 
-    const response = await fetch('/auth/login', {
+    if (password !== confirmPassword) {
+        showFlashMessage('Passwords do not match.', 'is-danger');
+        return;
+    }
+
+    const response = await fetch('/register', {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/x-www-form-urlencoded'
         },
-        body: JSON.stringify({ username, password })
+        body: `username=${encodeURIComponent(username)}&email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}&role=${encodeURIComponent(role)}`
     });
 
-    const data = await response.json();
     if (response.ok) {
-        localStorage.setItem('jwtToken', data.access_token);
-        alert('Login successful!');
+        showFlashMessage('Registration successful!', 'is-success');
+        document.getElementById('register-form').reset();
+        window.location.href = '/login';
+    } else {
+        showFlashMessage('Registration failed: Please check the details and try again.', 'is-danger');
+    }
+});
+
+function showFlashMessage(message, type) {
+    const flashMessage = document.getElementById('flash-message');
+    flashMessage.textContent = message;
+    flashMessage.className = `notification ${type}`;
+    flashMessage.classList.remove('is-hidden');
+    setTimeout(() => {
+        flashMessage.classList.add('is-hidden');
+    }, 3000);
+}
+
+
+document.getElementById('login-form').addEventListener('submit', async function(event) {
+    event.preventDefault();
+    const username = document.querySelector('input[name="username"]').value;
+    const password = document.querySelector('input[name="password"]').value;
+
+    const response = await fetch('/login', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: `username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`
+    });
+
+    if (response.ok) {
+        showFlashMessage('Login successful!', 'is-success');
         window.location.href = '/dashboard';
     } else {
-        const loginError = document.getElementById('loginError');
-        loginError.textContent = 'Login failed: ' + data.message;
-        loginError.classList.remove('is-hidden');
+        showFlashMessage('Login failed: Invalid credentials.', 'is-danger');
     }
 });
 
-document.getElementById('registerForm').addEventListener('submit', async function(event) {
-    event.preventDefault();
-    const username = document.getElementById('reg_username').value;
-    const email = document.getElementById('reg_email').value;
-    const password = document.getElementById('reg_password').value;
-    const role = document.getElementById('reg_role').value;
-
-    const response = await fetch('/auth/register', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ username, email, password, role })
-    });
-
-    const data = await response.json();
-    if (response.ok) {
-        alert('Registration successful!');
-        document.getElementById('registerForm').reset();
-        document.getElementById('registerSection').style.display = 'none';
-        document.getElementById('loginSection').style.display = 'block';
-    } else {
-        const registerError = document.getElementById('registerError');
-        registerError.textContent = 'Registration failed: ' + data.message;
-        registerError.classList.remove('is-hidden');
-    }
-});
+function showFlashMessage(message, type) {
+    const flashMessage = document.getElementById('flash-message');
+    flashMessage.textContent = message;
+    flashMessage.className = `notification ${type}`;
+    flashMessage.classList.remove('is-hidden');
+    setTimeout(() => {
+        flashMessage.classList.add('is-hidden');
+    }, 3000);
+}

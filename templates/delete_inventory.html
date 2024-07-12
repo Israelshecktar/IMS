@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}Delete Inventory{% endblock %}
+
+{% block content %}
+<section class="section">
+    <div class="container">
+        <h1 class="title">Delete Inventory</h1>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="notification is-primary">
+            {% for category, message in messages %}
+            <div class="notification is-{{ category }}">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+        <form id="deleteForm" method="POST" action="{{ url_for('delete_inventory') }}">
+            <div class="field">
+                <label class="label">Select Inventory Item to Delete</label>
+                <div class="control">
+                    <div class="select">
+                        <select name="item_id" required>
+                            {% for item in items %}
+                            <option value="{{ item.id }}">{{ item.product_name }} (Material: {{ item.material }}, Location: {{ item.location }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="field is-grouped">
+                <div class="control">
+                    <button class="button is-danger" type="button" id="confirmDeleteButton">Delete</button>
+                </div>
+                <div class="control">
+                    <a class="button is-light" href="{{ url_for('dashboard') }}">Cancel</a>
+                </div>
+                <div class="control">
+                    <a class="button is-primary" href="{{ url_for('dashboard') }}">Back to Dashboard</a>
+                </div>
+            </div>
+        </form>
+    </div>
+</section>
+
+<!-- Modal for confirmation -->
+<div class="modal" id="confirmationModal">
+    <div class="modal-background"></div>
+    <div class="modal-card">
+        <header class="modal-card-head">
+            <p class="modal-card-title">Confirm Deletion</p>
+            <button class="delete" aria-label="close" id="closeModalButton"></button>
+        </header>
+        <section class="modal-card-body">
+            <p>Are you sure you want to delete this inventory item?</p>
+        </section>
+        <footer class="modal-card-foot">
+            <button class="button is-danger" id="confirmDelete">Yes, Delete</button>
+            <button class="button" id="cancelDelete">Cancel</button>
+        </footer>
+    </div>
+</div>
+
+<script>
+document.getElementById('confirmDeleteButton').addEventListener('click', function() {
+    document.getElementById('confirmationModal').classList.add('is-active');
+});
+
+document.getElementById('closeModalButton').addEventListener('click', function() {
+    document.getElementById('confirmationModal').classList.remove('is-active');
+});
+
+document.getElementById('cancelDelete').addEventListener('click', function() {
+    document.getElementById('confirmationModal').classList.remove('is-active');
+});
+
+document.getElementById('confirmDelete').addEventListener('click', function() {
+    document.getElementById('deleteForm').submit();
+});
+</script>
+{% endblock %}

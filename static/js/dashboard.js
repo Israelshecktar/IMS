@@ -1,234 +1,142 @@
-document.addEventListener('DOMContentLoaded', function() {
-    const username = localStorage.getItem('username');
-    document.getElementById('username').textContent = username;
-
-    document.getElementById('logoutButton').addEventListener('click', async function() {
-        const token = localStorage.getItem('jwtToken');
-
-        const response = await fetch('/auth/logout', {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${token}`
-            }
+document.addEventListener('DOMContentLoaded', () => {
+    // Navbar Toggle
+    const navbarBurgers = Array.prototype.slice.call(document.querySelectorAll('.navbar-burger'), 0);
+    if (navbarBurgers.length > 0) {
+        navbarBurgers.forEach(el => {
+            el.addEventListener('click', () => {
+                const target = el.dataset.target;
+                const $target = document.getElementById(target);
+                el.classList.toggle('is-active');
+                $target.classList.toggle('is-active');
+            });
         });
+    }
 
-        if (response.ok) {
-            localStorage.removeItem('jwtToken');
-            alert('Logout successful!');
-            window.location.href = '/';
-        } else {
-            const data = await response.json();
-            alert('Logout failed: ' + data.message);
-        }
+    // Search Functionality
+    const searchButton = document.getElementById('searchButton');
+    searchButton.addEventListener('click', () => {
+        const query = document.getElementById('searchInput').value;
+        fetch(`/search?query=${query}`)
+            .then(response => response.json())
+            .then(data => {
+                const searchResults = document.getElementById('searchResults');
+                searchResults.innerHTML = '';
+                data.forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = 'column is-one-quarter';
+                    div.innerHTML = `<div class="box">${item.name}</div>`;
+                    searchResults.appendChild(div);
+                });
+            })
+            .catch(error => console.error('Error:', error));
     });
 
-    document.getElementById('updateProfile').addEventListener('click', function() {
-        window.location.href = '/update_profile';
+    // Profile Dropdown
+    const profileButton = document.querySelector('.dropdown-trigger button');
+    profileButton.addEventListener('click', () => {
+        const dropdownMenu = document.getElementById('dropdown-menu');
+        dropdownMenu.classList.toggle('is-active');
     });
 
-    document.getElementById('viewInventory').addEventListener('click', function() {
+    // Logout Functionality
+    const logoutButton = document.getElementById('logoutButton');
+    logoutButton.addEventListener('click', () => {
+        fetch('/logout', { method: 'POST' })
+            .then(response => {
+                if (response.ok) {
+                    window.location.href = '/login';
+                }
+            })
+            .catch(error => console.error('Error:', error));
+    });
+
+    // Inventory Management Links
+    document.getElementById('viewInventory').addEventListener('click', () => {
         window.location.href = '/inventory';
     });
-
-    document.getElementById('addInventory').addEventListener('click', function() {
+    document.getElementById('addInventory').addEventListener('click', () => {
         window.location.href = '/add_inventory';
     });
-
-    document.getElementById('updateInventory').addEventListener('click', function() {
-        const id = prompt("Enter the ID of the inventory item to update:");
-        if (id) {
-            window.location.href = `/update_inventory/${id}`;
-        }
+    document.getElementById('updateInventory').addEventListener('click', () => {
+        window.location.href = '/update_inventory';
+    });
+    document.getElementById('deleteInventory').addEventListener('click', () => {
+        window.location.href = '/delete_inventory';
     });
 
-    document.getElementById('takeInventory').addEventListener('click', function() {
-        window.location.href = '/take_inventory';
-    });
-
-    document.getElementById('viewReports').addEventListener('click', function() {
+    // Reports and Analytics Links
+    document.getElementById('viewReports').addEventListener('click', () => {
         window.location.href = '/report/inventory_levels';
     });
-
-    document.getElementById('generateReport').addEventListener('click', function() {
-        window.location.href = '/report/inventory_levels';
+    document.getElementById('generateReport').addEventListener('click', () => {
+        window.location.href = '/report/inventory_taken';
     });
 
-    document.getElementById('deleteInventory').addEventListener('click', function() {
-        const id = prompt("Enter the ID of the inventory item to delete:");
-        if (id) {
-            window.location.href = `/delete_inventory/${id}`;
-        }
-    });
-
-    // Enhanced search functionality
-    document.getElementById('searchButton').addEventListener('click', async function() {
-        const query = document.getElementById('searchInput').value;
-        const token = localStorage.getItem('jwtToken');
-
-        const response = await fetch(`/inventory?material=${query}&product_name=${query}&location=${query}`, {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${token}`
-            }
-        });
-
-        if (response.ok) {
-            const data = await response.json();
-            const searchResults = document.getElementById('searchResults');
-            searchResults.innerHTML = ''; // Clear previous results
-
-            data.items.forEach(item => {
-                const column = document.createElement('div');
-                column.className = 'column is-full-mobile is-half-tablet is-one-quarter-desktop';
-
-                const card = document.createElement('div');
-                card.className = 'card';
-
-                const cardHeader = document.createElement('header');
-                cardHeader.className = 'card-header';
-
-                const cardHeaderTitle = document.createElement('p');
-                cardHeaderTitle.className = 'card-header-title';
-                cardHeaderTitle.textContent = item.product_name;
-
-                const cardHeaderIcon = document.createElement('button');
-                cardHeaderIcon.className = 'card-header-icon';
-                cardHeaderIcon.setAttribute('aria-label', 'more options');
-
-                const iconSpan = document.createElement('span');
-                iconSpan.className = 'icon';
-
-                const icon = document.createElement('i');
-                icon.className = 'fas fa-angle-down';
-                icon.setAttribute('aria-hidden', 'true');
-
-                iconSpan.appendChild(icon);
-                cardHeaderIcon.appendChild(iconSpan);
-                cardHeader.appendChild(cardHeaderTitle);
-                cardHeader.appendChild(cardHeaderIcon);
-
-                const cardContent = document.createElement('div');
-                cardContent.className = 'card-content';
-
-                const content = document.createElement('div');
-                content.className = 'content';
-
-                const material = document.createElement('p');
-                material.textContent = `Material: ${item.material}`;
-
-                const location = document.createElement('p');
-                location.textContent = `Location: ${item.location}`;
-
-                const totalLitres = document.createElement('p');
-                totalLitres.textContent = `Total Litres: ${item.total_litres}`;
-
-                const dateReceived = document.createElement('p');
-                dateReceived.textContent = `Date Received: ${new Date(item.date_received).toLocaleDateString()}`;
-
-                const bestBeforeDate = document.createElement('p');
-                bestBeforeDate.textContent = `Best Before Date: ${new Date(item.best_before_date).toLocaleDateString()}`;
-
-                content.appendChild(material);
-                content.appendChild(location);
-                content.appendChild(totalLitres);
-                content.appendChild(dateReceived);
-                content.appendChild(bestBeforeDate);
-                cardContent.appendChild(content);
-                card.appendChild(cardHeader);
-                card.appendChild(cardContent);
-                column.appendChild(card);
-                searchResults.appendChild(column);
-            });
-        } else {
-            const data = await response.json();
-            alert('Search failed: ' + data.message);
-        }
-    });
-
-    // Filter functionality
-    document.getElementById('filterButton').addEventListener('click', async function() {
+    // Filter Functionality
+    const filterButton = document.getElementById('filterButton');
+    filterButton.addEventListener('click', () => {
         const material = document.getElementById('filterMaterial').value;
         const productName = document.getElementById('filterProductName').value;
         const location = document.getElementById('filterLocation').value;
-        const token = localStorage.getItem('jwtToken');
-
-        const response = await fetch(`/inventory?material=${material}&product_name=${productName}&location=${location}`, {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${token}`
-            }
-        });
-
-        if (response.ok) {
-            const data = await response.json();
-            const searchResults = document.getElementById('searchResults');
-            searchResults.innerHTML = ''; // Clear previous results
-
-            data.items.forEach(item => {
-                const column = document.createElement('div');
-                column.className = 'column is-full-mobile is-half-tablet is-one-quarter-desktop';
-
-                const card = document.createElement('div');
-                card.className = 'card';
-
-                const cardHeader = document.createElement('header');
-                cardHeader.className = 'card-header';
-
-                const cardHeaderTitle = document.createElement('p');
-                cardHeaderTitle.className = 'card-header-title';
-                cardHeaderTitle.textContent = item.product_name;
-
-                const cardHeaderIcon = document.createElement('button');
-                cardHeaderIcon.className = 'card-header-icon';
-                cardHeaderIcon.setAttribute('aria-label', 'more options');
-
-                const iconSpan = document.createElement('span');
-                iconSpan.className = 'icon';
-
-                const icon = document.createElement('i');
-                icon.className = 'fas fa-angle-down';
-                icon.setAttribute('aria-hidden', 'true');
-
-                iconSpan.appendChild(icon);
-                cardHeaderIcon.appendChild(iconSpan);
-                cardHeader.appendChild(cardHeaderTitle);
-                cardHeader.appendChild(cardHeaderIcon);
-
-                const cardContent = document.createElement('div');
-                cardContent.className = 'card-content';
-
-                const content = document.createElement('div');
-                content.className = 'content';
-
-                const material = document.createElement('p');
-                material.textContent = `Material: ${item.material}`;
-
-                const location = document.createElement('p');
-                location.textContent = `Location: ${item.location}`;
-
-                const totalLitres = document.createElement('p');
-                totalLitres.textContent = `Total Litres: ${item.total_litres}`;
-
-                const dateReceived = document.createElement('p');
-                dateReceived.textContent = `Date Received: ${new Date(item.date_received).toLocaleDateString()}`;
-
-                const bestBeforeDate = document.createElement('p');
-                bestBeforeDate.textContent = `Best Before Date: ${new Date(item.best_before_date).toLocaleDateString()}`;
-
-                content.appendChild(material);
-                content.appendChild(location);
-                content.appendChild(totalLitres);
-                content.appendChild(dateReceived);
-                content.appendChild(bestBeforeDate);
-                cardContent.appendChild(content);
-                card.appendChild(cardHeader);
-                card.appendChild(cardContent);
-                column.appendChild(card);
-                searchResults.appendChild(column);
-            });
-        } else {
-            const data = await response.json();
-            alert('Filter failed: ' + data.message);
-        }
+        fetch(`/inventory?material=${material}&product_name=${productName}&location=${location}`)
+            .then(response => response.json())
+            .then(data => {
+                const searchResults = document.getElementById('searchResults');
+                searchResults.innerHTML = '';
+                data.forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = 'column is-one-quarter';
+                    div.innerHTML = `<div class="box">${item.name}</div>`;
+                    searchResults.appendChild(div);
+                });
+            })
+            .catch(error => console.error('Error:', error));
     });
+
+    // Notifications
+    const notificationButton = document.querySelector('.fa-bell');
+    notificationButton.addEventListener('click', () => {
+        fetch('/notifications')
+            .then(response => response.json())
+            .then(data => {
+                // Handle notifications
+                console.log(data);
+            })
+            .catch(error => console.error('Error:', error));
+    });
+
+    // Dynamic Content Update
+    function updateDashboard() {
+        fetch('/dashboard_data')
+            .then(response => response.json())
+            .then(data => {
+                document.querySelector('.total-items').textContent = `Total Items: ${data.total_items}`;
+                document.querySelector('.pending-tasks').textContent = `Pending Tasks: ${data.pending_tasks}`;
+                document.querySelector('.new-reports').textContent = `New Reports: ${data.new_reports}`;
+                document.querySelector('.items-to-delete').textContent = `Items to Delete: ${data.items_to_delete}`;
+            })
+            .catch(error => console.error('Error:', error));
+    }
+
+    updateDashboard();
+    setInterval(updateDashboard, 60000); // Update every minute
+
+    // Error Handling
+    function handleError(error) {
+        console.error('Error:', error);
+        alert('An error occurred. Please try again.');
+    }
+});
+document.addEventListener('DOMContentLoaded', () => {
+    const $navbarBurgers = Array.prototype.slice.call(document.querySelectorAll('.navbar-burger'), 0);
+    if ($navbarBurgers.length > 0) {
+        $navbarBurgers.forEach(el => {
+            el.addEventListener('click', () => {
+                const target = el.dataset.target;
+                const $target = document.getElementById(target);
+                el.classList.toggle('is-active');
+                $target.classList.toggle('is-active');
+            });
+        });
+    }
 });

@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block title %}Inventory List{% endblock %}
+
+{% block content %}
+<section class="section">
+    <div class="container">
+        <h1 class="title">Inventory List</h1>
+        <div class="field is-grouped is-grouped-multiline">
+            <div class="control is-expanded">
+                <input class="input" type="text" id="filterMaterial" placeholder="Filter by material">
+            </div>
+            <div class="control is-expanded">
+                <input class="input" type="text" id="filterProductName" placeholder="Filter by product name">
+            </div>
+            <div class="control is-expanded">
+                <input class="input" type="text" id="filterLocation" placeholder="Filter by location">
+            </div>
+            <div class="control">
+                <button class="button is-primary" id="filterButton">Filter</button>
+            </div>
+            <div class="control">
+                <a class="button is-primary" href="{{ url_for('dashboard') }}">Back to Dashboard</a>
+            </div>
+        </div>
+        <div class="table-container">
+            <table class="table is-fullwidth is-striped is-hoverable">
+                <thead>
+                    <tr>
+                        <th>Material</th>
+                        <th>Product Name</th>
+                        <th>Location</th>
+                        <th>Total Litres</th>
+                    </tr>
+                </thead>
+                <tbody id="inventoryTableBody">
+                    {% for item in items %}
+                    <tr>
+                        <td>{{ item.material }}</td>
+                        <td>{{ item.product_name }}</td>
+                        <td>{{ item.location }}</td>
+                        <td>{{ item.total_litres }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <nav class="pagination is-centered" role="navigation" aria-label="pagination">
+            {% if pagination.has_prev %}
+            <a class="pagination-previous" href="{{ url_for('get_inventory', page=pagination.prev_num) }}">Previous</a>
+            {% else %}
+            <a class="pagination-previous" disabled>Previous</a>
+            {% endif %}
+            {% if pagination.has_next %}
+            <a class="pagination-next" href="{{ url_for('get_inventory', page=pagination.next_num) }}">Next</a>
+            {% else %}
+            <a class="pagination-next" disabled>Next</a>
+            {% endif %}
+            <ul class="pagination-list">
+                {% for page_num in pagination.iter_pages() %}
+                {% if page_num %}
+                {% if page_num == pagination.page %}
+                <li><a class="pagination-link is-current">{{ page_num }}</a></li>
+                {% else %}
+                <li><a class="pagination-link" href="{{ url_for('get_inventory', page=page_num) }}">{{ page_num }}</a></li>
+                {% endif %}
+                {% else %}
+                <li><span class="pagination-ellipsis">…</span></li>
+                {% endif %}
+                {% endfor %}
+            </ul>
+        </nav>
+    </div>
+</section>
+
+<script>
+document.getElementById('filterButton').addEventListener('click', function() {
+    const material = document.getElementById('filterMaterial').value;
+    const productName = document.getElementById('filterProductName').value;
+    const location = document.getElementById('filterLocation').value;
+    const url = new URL(window.location.href);
+    url.searchParams.set('material', material);
+    url.searchParams.set('product_name', productName);
+    url.searchParams.set('location', location);
+    window.location.href = url.toString();
+});
+</script>
+{% endblock %}

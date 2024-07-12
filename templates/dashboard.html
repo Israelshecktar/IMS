@@ -17,8 +17,8 @@
 
     <div id="navbarBasicExample" class="navbar-menu">
         <div class="navbar-start">
-            <a class="navbar-item" href="/inventory/view">Inventory Management</a>
-            <a class="navbar-item" href="/reports/view">Reports</a>
+            <a class="navbar-item is-primary" href="/inventory">Inventory Management</a>
+            <a class="navbar-item is-primary" href="/report">Reports</a>
         </div>
 
         <div class="navbar-end">
@@ -50,8 +50,8 @@
                     </div>
                     <div class="dropdown-menu" id="dropdown-menu" role="menu">
                         <div class="dropdown-content">
-                            <a href="#" id="updateProfile" class="dropdown-item">Update Profile</a>
-                            <a href="#" id="logoutButton" class="dropdown-item">Logout</a>
+                            <a href="/update_profile" id="updateProfile" class="dropdown-item is-primary">Update Profile</a>
+                            <a href="/logout" id="logoutButton" class="dropdown-item is-primary">Logout</a>
                         </div>
                     </div>
                 </div>
@@ -84,9 +84,9 @@
                         <div class="content">
                             <p>Total Items: 120</p>
                             <ul>
-                                <li><a href="#" id="viewInventory">View Inventory</a></li>
-                                <li><a href="#" id="addInventory">Add Inventory</a></li>
-                                <li><a href="#" id="updateInventory">Update Inventory</a></li>
+                                <li><a class="has-text-primary" href="/inventory">View Inventory</a></li>
+                                <li><a class="has-text-primary" href="/add_inventory">Add Inventory</a></li>
+                                <li><a class="has-text-primary" href="/update_inventory">Update Inventory</a></li>
                             </ul>
                         </div>
                     </div>
@@ -105,7 +105,7 @@
                     <div class="card-content">
                         <div class="content">
                             <p>Pending Tasks: 5</p>
-                            <a href="#" id="takeInventory">Take Inventory</a>
+                            <a class="has-text-primary" href="/take_inventory" id="takeInventory">Take Inventory</a>
                         </div>
                     </div>
                 </div>
@@ -124,8 +124,8 @@
                         <div class="content">
                             <p>New Reports: 3</p>
                             <ul>
-                                <li><a href="#" id="viewReports">View Reports</a></li>
-                                <li><a href="#" id="generateReport">Generate Report</a></li>
+                                <li><a class="has-text-primary" href="/report/inventory_levels" id="viewReports">View Reports</a></li>
+                                <li><a class="has-text-primary" href="/report/inventory_taken" id="generateReport">Generate Report</a></li>
                             </ul>
                         </div>
                     </div>
@@ -144,7 +144,7 @@
                     <div class="card-content">
                         <div class="content">
                             <p>Items to Delete: 2</p>
-                            <a href="#" id="deleteInventory">Delete Inventory</a>
+                            <a class="has-text-primary" href="/delete_inventory" id="deleteInventory">Delete Inventory</a>
                         </div>
                     </div>
                 </div>
@@ -155,46 +155,19 @@
 
 <section class="section">
     <div class="container">
-        <div class="field is-grouped">
-            <div class="control">
-                <input class="input" type="text" id="filterMaterial" placeholder="Filter by material">
+        <div class="columns">
+            <div class="column">
+                <h2 class="title">Expiring Soon</h2>
+                <canvas id="expiringSoonChart"></canvas>
             </div>
-            <div class="control">
-                <input class="input" type="text" id="filterProductName" placeholder="Filter by product name">
+            <div class="column">
+                <h2 class="title">Products Below Threshold</h2>
+                <canvas id="belowThresholdChart"></canvas>
+                <a class="button is-primary" href="/inventory/below_threshold?download=true">Download Report</a>
             </div>
-            <div class="control">
-                <input class="input" type="text" id="filterLocation" placeholder="Filter by location">
-            </div>
-            <div class="control">
-                <button class="button is-primary" id="filterButton">Filter</button>
-            </div>
-        </div>
-        <div id="searchResults" class="columns is-multiline">
-            <!-- Search results will be dynamically inserted here -->
         </div>
     </div>
 </section>
-
-<section class="section">
-    <div class="container">
-        <h2 class="title">Recent Activities</h2>
-        <div class="box">
-            <p><strong>Patu Nana</strong> added a new item to the inventory.</p>
-            <p><strong>Agbaraojo</strong> updated the stock levels for Product X.</p>
-            <p><strong>Bankole_Admin</strong> deleted an expired item from the inventory.</p>
-        </div>
-    </div>
-</section>
-
-<section class="section">
-    <div class="container">
-        <h2 class="title">Inventory Overview</h2>
-        <div class="box">
-            <canvas id="inventoryChart"></canvas>
-        </div>
-    </div>
-</section>
-
 <!-- Include Chart.js and custom scripts -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>

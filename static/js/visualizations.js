@@ -1,33 +1,106 @@
-document.addEventListener('DOMContentLoaded', function() {
-    const ctx = document.getElementById('inventoryChart').getContext('2d');
-    const inventoryChart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: ['HEMPATHANE HS 55619 RAL 3000', 'HEMPEL CURING AGENT 95370-00000', 'HEMPADUR THINNER 08450 IMPR', 'HEMPEL 08080-0000 THINNER FINISH 1L'],
-            datasets: [{
-                label: 'Inventory Levels',
-                data: [120, 150, 180, 90],
-                backgroundColor: [
-                    'rgba(54, 162, 235, 0.2)',
-                    'rgba(255, 206, 86, 0.2)',
-                    'rgba(75, 192, 192, 0.2)',
-                    'rgba(153, 102, 255, 0.2)'
-                ],
-                borderColor: [
-                    'rgba(54, 162, 235, 1)',
-                    'rgba(255, 206, 86, 1)',
-                    'rgba(75, 192, 192, 1)',
-                    'rgba(153, 102, 255, 1)'
-                ],
-                borderWidth: 1
-            }]
-        },
-        options: {
-            scales: {
-                y: {
-                    beginAtZero: true
-                }
+document.addEventListener('DOMContentLoaded', () => {
+    const $navbarBurgers = Array.prototype.slice.call(document.querySelectorAll('.navbar-burger'), 0);
+    if ($navbarBurgers.length > 0) {
+        $navbarBurgers.forEach(el => {
+            el.addEventListener('click', () => {
+                const target = el.dataset.target;
+                const $target = document.getElementById(target);
+                el.classList.toggle('is-active');
+                $target.classList.toggle('is-active');
+            });
+        });
+    }
+
+    fetch('/inventory/expiring_soon')
+        .then(response => response.json())
+        .then(data => {
+            if (data.length > 0) {
+                const ctx = document.getElementById('expiringSoonChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'pie',
+                    data: {
+                        labels: data.map(item => item.product_name),
+                        datasets: [{
+                            label: 'Total Litres',
+                            data: data.map(item => item.total_litres),
+                            backgroundColor: data.map(() => `rgba(${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, 0.2)`),
+                            borderColor: data.map(() => `rgba(${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, 1)`),
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        let label = context.label || '';
+                                        if (label) {
+                                            label += ': ';
+                                        }
+                                        label += context.raw;
+                                        return label;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            } else {
+                document.getElementById('expiringSoonChart').parentElement.innerHTML = '<p>No products expiring soon.</p>';
             }
-        }
-    });
+        });
+
+    fetch('/inventory/below_threshold')
+        .then(response => response.json())
+        .then(data => {
+            if (data.length > 0) {
+                const ctx = document.getElementById('belowThresholdChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: data.map(item => item.product_name),
+                        datasets: [{
+                            label: 'Total Litres',
+                            data: data.map(item => item.total_litres),
+                            backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                            borderColor: 'rgba(54, 162, 235, 1)',
+                            borderWidth: 1,
+                            fill: true,
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        let label = context.label || '';
+                                        if (label) {
+                                            label += ': ';
+                                        }
+                                        label += context.raw;
+                                        return label;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            } else {
+                document.getElementById('belowThresholdChart').parentElement.innerHTML = '<p>No products below threshold.</p>';
+            }
+        });
 });

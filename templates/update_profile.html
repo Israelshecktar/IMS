@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block title %}Update Profile{% endblock %}
+
+{% block content %}
+<section class="section">
+    <div class="container">
+        <h1 class="title">Update Profile</h1>
+        <form method="POST" action="{{ url_for('update_profile') }}">
+            <div class="field">
+                <label class="label">Username</label>
+                <div class="control">
+                    <input class="input" type="text" name="username" value="{{ user.username }}" required>
+                </div>
+            </div>
+            <div class="field">
+                <label class="label">Email</label>
+                <div class="control">
+                    <input class="input" type="email" name="email" value="{{ user.email }}" required>
+                </div>
+            </div>
+            <div class="field">
+                <label class="label">Password</label>
+                <div class="control">
+                    <input class="input" type="password" name="password">
+                </div>
+                <p class="help">Leave blank if you don't want to change the password</p>
+            </div>
+            <div class="field">
+                <div class="control">
+                    <button class="button is-primary" type="submit">Update Profile</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</section>
+{% endblock %}
