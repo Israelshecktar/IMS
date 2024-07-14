@@ -15,6 +15,9 @@ from functools import wraps
 from decimal import Decimal
 from models import db, Inventory, User, InventoryTransaction
 from itsdangerous import URLSafeTimedSerializer
+from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.triggers.cron import CronTrigger
+from pytz import timezone
 from config import (
     SQLALCHEMY_DATABASE_URI,
     SECRET_KEY,
@@ -26,7 +29,6 @@ from config import (
     MAIL_DEFAULT_SENDER,
 )
 from flask_mail import Mail, Message
-from apscheduler.schedulers.background import BackgroundScheduler
 from datetime import datetime, timedelta
 
 app = Flask(__name__)
@@ -184,7 +186,13 @@ def update_profile():
 
 # inventory management routes
 # Home Route
-from flask import flash
+@app.route("/view_full_inventory", methods=["GET"])
+def view_full_inventory():
+    # Query all inventory items
+    inventory_items = Inventory.query.all()
+
+    # Render the HTML template and pass the inventory items to it
+    return render_template("full_inventory.html", inventory_items=inventory_items)
 
 
 @app.route("/add_inventory", methods=["GET", "POST"])
@@ -542,7 +550,6 @@ def user_activity_report():
             "username": user.username,
             "email": user.email,
             "role": user.role,
-            # Removed the 'last_login' attribute since it does not exist in the User model
         }
         for user in users
     ]
@@ -564,44 +571,88 @@ def user_activity_report():
 
 # Automated Email Notifications
 def check_inventory_levels():
-    low_inventory_items = Inventory.query.filter(Inventory.total_litres < 50).all()
-    if low_inventory_items:
-        product_list = "\n".join(
-            [
-                f"{item.product_name}: {item.total_litres} liters"
+    with app.app_context():
+        low_inventory_items = Inventory.query.filter(Inventory.total_litres < 50).all()
+        if low_inventory_items:
+            inventory_list = [
+                {
+                    "id": item.id,
+                    "material": item.material,
+                    "product_name": item.product_name,
+                    "total_litres": float(item.total_litres),
+                    "date_received": item.date_received.isoformat(),
+                    "best_before_date": item.best_before_date.isoformat(),
+                    "location": item.location,
+                }
                 for item in low_inventory_items
             ]
-        )
-        msg = Message("Low Inventory Alert", recipients=[MAIL_USERNAME])
-        msg.body = f"The following products are below the 50 liters threshold:\n\n{product_list}"
-        mail.send(msg)
+
+            # Create a DataFrame and save it to a BytesIO object
+            df = pd.DataFrame(inventory_list)
+            output = io.BytesIO()
+            with pd.ExcelWriter(output, engine="openpyxl") as writer:
+                df.to_excel(writer, index=False, sheet_name="Low Inventory")
+            output.seek(0)
+
+            # Create the email message
+            msg = Message("Low Inventory Alert", recipients=[MAIL_USERNAME])
+            msg.body = "The following products are below the 50 liters threshold. Please find the attached report for details."
+            msg.attach(
+                "low_inventory_report.xlsx",
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                output.read(),
+            )
+            mail.send(msg)
 
 
 def check_expiring_products():
-    three_months_from_now = datetime.now() + timedelta(days=90)
-    expiring_items = Inventory.query.filter(
-        Inventory.best_before_date <= three_months_from_now
-    ).all()
-    if expiring_items:
-        product_list = "\n".join(
-            [
-                f"{item.product_name}: expires on {item.best_before_date}"
+    with app.app_context():
+        three_months_from_now = datetime.now() + timedelta(days=90)
+        expiring_items = Inventory.query.filter(
+            Inventory.best_before_date <= three_months_from_now
+        ).all()
+        if expiring_items:
+            inventory_list = [
+                {
+                    "id": item.id,
+                    "material": item.material,
+                    "product_name": item.product_name,
+                    "total_litres": float(item.total_litres),
+                    "date_received": item.date_received.isoformat(),
+                    "best_before_date": item.best_before_date.isoformat(),
+                    "location": item.location,
+                }
                 for item in expiring_items
             ]
-        )
-        msg = Message("Expiration Notice", recipients=[MAIL_USERNAME])
-        msg.body = f"The following products are expiring within the next 3 months:\n\n{product_list}"
-        mail.send(msg)
+
+            # Create a DataFrame and save it to a BytesIO object
+            df = pd.DataFrame(inventory_list)
+            output = io.BytesIO()
+            with pd.ExcelWriter(output, engine="openpyxl") as writer:
+                df.to_excel(writer, index=False, sheet_name="Expiring Soon")
+            output.seek(0)
+
+            # Create the email message
+            msg = Message("Expiration Notice", recipients=[MAIL_USERNAME])
+            msg.body = "The following products are expiring within the next 3 months. Please find the attached report for details."
+            msg.attach(
+                "expiring_soon_report.xlsx",
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                output.read(),
+            )
+            mail.send(msg)
 
 
 # Scheduling the Tasks
 scheduler = BackgroundScheduler()
 scheduler.add_job(
-    func=check_inventory_levels, trigger="interval", hours=24
-)  # Check daily
+    func=check_inventory_levels,
+    trigger=CronTrigger(day_of_week="fri", hour=10, minute=0, timezone="Africa/Lagos"),
+)  # Check every Friday at 10 AM WAT
 scheduler.add_job(
-    func=check_expiring_products, trigger="interval", weeks=1
-)  # Check weekly
+    func=check_expiring_products,
+    trigger=CronTrigger(day_of_week="fri", hour=10, minute=0, timezone="Africa/Lagos"),
+)  # Check every Friday at 10 AM WAT
 scheduler.start()
 
 # Initialize the database

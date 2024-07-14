@@ -117,7 +117,7 @@
                         <div class="content">
                             <p>New Reports: 3</p>
                             <ul>
-                                <li><a class="has-text-primary" href="/report/inventory_levels" id="viewReports">View Reports</a></li>
+                                <li><a class="has-text-primary" href="/view_full_inventory" id="viewReports">View Full Inventory</a></li>
                                 <li><a class="has-text-primary" href="/report/inventory_taken" id="generateReport">Generate Report</a></li>
                             </ul>
                         </div>
@@ -164,6 +164,35 @@
         </div>
     </div>
 </section>
+<footer class="footer has-background-primary" style="padding: 1rem 1.5rem;">
+    <div class="content has-text-centered has-text-white">
+        <p>
+            <strong>StockGuard</strong> Built by <a href="https://github.com/Israelshecktar" class="has-text-white">Shecktar</a> 
+            <br>
+            <span class="icon">
+                <i class="fas fa-envelope"></i>
+            </span>
+            <a href="mailto:iamshecktar1996@gmail.com" class="has-text-white">support@shecktar.com</a>
+        </p>
+        <p>
+            <a href="https://twitter.com/shecktar5" class="has-text-white">
+                <span class="icon">
+                    <i class="fab fa-twitter"></i>
+                </span>
+            </a>
+            <a href="https://linkedin.com/in/israel-ewedairo-439bb5240" class="has-text-white">
+                <span class="icon">
+                    <i class="fab fa-linkedin"></i>
+                </span>
+            </a>
+            <a href="https://medium.com/@shecktar" class="has-text-white">
+                <span class="icon">
+                    <i class="fab fa-medium"></i>
+                </span>
+            </a>
+        </p>
+    </div>
+</footer>
 <!-- Include Chart.js and custom scripts -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>

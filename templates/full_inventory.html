@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}Full Inventory{% endblock %}
+
+{% block content %}
+<nav class="navbar is-primary" role="navigation" aria-label="main navigation">
+    <!-- Your existing navbar code -->
+</nav>
+
+<section class="section">
+    <div class="container">
+        <h1 class="title">Full Inventory</h1>
+
+        <table class="table is-fullwidth">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Material</th>
+                    <th>Product Name</th>
+                    <th>Total Litres</th>
+                    <th>Date Received</th>
+                    <th>Best Before Date</th>
+                    <th>Location</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in inventory_items %}
+                <tr>
+                    <td>{{ item.id }}</td>
+                    <td>{{ item.material }}</td>
+                    <td>{{ item.product_name }}</td>
+                    <td>{{ item.total_litres }}</td>
+                    <td>{{ item.date_received }}</td>
+                    <td>{{ item.best_before_date }}</td>
+                    <td>{{ item.location }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="field">
+            <div class="control">
+                <a class="button is-link" href="{{ url_for('dashboard') }}">Back to Dashboard</a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
