@@ -27,8 +27,13 @@
                     <input class="input" type="text" id="material" name="material" required>
                 </div>
             </div>
-            <div class="control">
-                <button class="button is-primary" type="button" id="fetchDetails">Fetch Details</button>
+            <div class="field is-grouped">
+                <div class="control">
+                    <button class="button is-primary" type="button" id="fetchDetails">Fetch Details</button>
+                </div>
+                <div class="control">
+                    <a class="button is-link" href="{{ url_for('dashboard') }}">Back to Dashboard</a>
+                </div>
             </div>
         </form>
 
@@ -52,10 +57,6 @@
                     <button class="button is-primary" type="submit">Take Inventory</button>
                 </div>
             </form>
-        </div>
-
-        <div class="control mt-4">
-            <a class="button is-link" href="{{ url_for('dashboard') }}">Back to Dashboard</a>
         </div>
     </div>
 </section>
