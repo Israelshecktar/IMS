@@ -30,15 +30,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     },
                     options: {
                         responsive: true,
+                        maintainAspectRatio: false,  // Allow custom sizing
                         plugins: {
                             legend: {
-                                position: 'right',
-                                labels: {
-                                    font: {
-                                        size: 14
-                                    },
-                                    color: '#333'
-                                }
+                                display: false // Hide the legend
                             },
                             tooltip: {
                                 callbacks: {

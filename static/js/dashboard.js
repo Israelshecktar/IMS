@@ -138,3 +138,23 @@ document.addEventListener('DOMContentLoaded', () => {
         alert('An error occurred. Please try again.');
     }
 });
+document.addEventListener('DOMContentLoaded', function() {
+    // Function to update the total number of products on the dashboard
+    function updateTotalProducts() {
+        fetch('/inventory/total')
+            .then(response => response.json())
+            .then(data => {
+                const totalProductsElement = document.querySelector('.total-items');
+                if (totalProductsElement) {
+                    totalProductsElement.textContent = `Total Sku: ${data.total}`;
+                }
+            })
+            .catch(error => console.error('Error fetching total products:', error));
+    }
+
+    // Call the function to update the total products on page load
+    updateTotalProducts();
+
+    // Optionally, set an interval to update the total products periodically
+    setInterval(updateTotalProducts, 60000); // Update every 60 seconds
+});

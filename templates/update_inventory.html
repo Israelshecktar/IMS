@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+
+{% block title %}Update Inventory{% endblock %}
+
+{% block content %}
+<nav class="navbar is-primary" role="navigation" aria-label="main navigation">
+</nav>
+
+<section class="section">
+    <div class="container">
+        <h1 class="title">Update Inventory Item</h1>
+
+        <!-- Flash messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="notification is-{{ category }}">
+                {{ message }}
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <form id="fetchInventoryForm">
+            <div class="field">
+                <label class="label">Material</label>
+                <div class="control">
+                    <input class="input" type="text" name="material" id="materialInput">
+                </div>
+            </div>
+            <div class="field is-grouped">
+                <div class="control">
+                    <button class="button is-primary" type="button" id="fetchInventoryButton">Fetch Inventory</button>
+                </div>
+                <div class="control">
+                    <a class="button is-link" href="{{ url_for('dashboard') }}">Back to Dashboard</a>
+                </div>
+            </div>
+        </form>
+
+        <form id="updateInventoryForm" action="{{ url_for('update_inventory') }}" method="post" style="display: none;">
+            <input type="hidden" name="id" id="inventoryId">
+            <div class="field">
+                <label class="label">Material</label>
+                <div class="control">
+                    <input class="input" type="text" name="material" id="material" readonly>
+                </div>
+            </div>
+            <div class="field">
+                <label class="label">Product Name</label>
+                <div class="control">
+                    <input class="input" type="text" name="product_name" id="productName">
+                </div>
+            </div>
+            <div class="field">
+                <label class="label">Total Litres</label>
+                <div class="control">
+                    <input class="input" type="number" name="total_litres" id="totalLitres">
+                </div>
+            </div>
+            <div class="field">
+                <label class="label">Date Received</label>
+                <div class="control">
+                    <input class="input" type="date" name="date_received" id="dateReceived">
+                </div>
+            </div>
+            <div class="field">
+                <label class="label">Best Before Date</label>
+                <div class="control">
+                    <input class="input" type="date" name="best_before_date" id="bestBeforeDate">
+                </div>
+            </div>
+            <div class="field">
+                <label class="label">Location</label>
+                <div class="control">
+                    <input class="input" type="text" name="location" id="location">
+                </div>
+            </div>
+            <div class="field">
+                <div class="control">
+                    <label class="checkbox">
+                        <input type="checkbox" name="confirm_update" value="yes">
+                        Confirm Update
+                    </label>
+                </div>
+            </div>
+            <div class="field">
+                <div class="control">
+                    <button class="button is-primary" type="submit">Update</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</section>
+
+<script>
+    document.getElementById("fetchInventoryButton").addEventListener("click", function() {
+        const material = document.getElementById("materialInput").value;
+        fetch("{{ url_for('get_inventory_by_material') }}", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ material: material })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                alert(data.error);
+            } else {
+                document.getElementById("inventoryId").value = data.id;
+                document.getElementById("material").value = data.material;
+                document.getElementById("productName").value = data.product_name;
+                document.getElementById("totalLitres").value = data.total_litres;
+                document.getElementById("dateReceived").value = data.date_received;
+                document.getElementById("bestBeforeDate").value = data.best_before_date;
+                document.getElementById("location").value = data.location;
+                document.getElementById("updateInventoryForm").style.display = "block";
+            }
+        })
+        .catch(error => console.error("Error:", error));
+    });
+</script>
+{% endblock %}

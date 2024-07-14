@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}User Activity Report{% endblock %}
+
+{% block content %}
+<nav class="navbar is-primary" role="navigation" aria-label="main navigation">
+    <!-- Your existing navbar code -->
+</nav>
+
+<section class="section">
+    <div class="container">
+        <h1 class="title">User Activity Report</h1>
+
+        <!-- Flash messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="notification is-{{ category }}">
+                {{ message }}
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <form method="get" action="{{ url_for('user_activity_report') }}">
+            <div class="field">
+                <div class="control">
+                    <button class="button is-primary" type="submit" name="download" value="true">Download Report</button>
+                </div>
+                <div class="control">
+                    <a class="button is-link" href="{{ url_for('dashboard') }}">Back to Dashboard</a>
+                </div>
+            </div>
+        </form>
+
+        {% if report %}
+        <h2 class="title">Report</h2>
+        <table class="table is-fullwidth">
+            <thead>
+                <tr>
+                    <th>Username</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in report %}
+                <tr>
+                    <td>{{ item.username }}</td>
+                    <td>{{ item.email }}</td>
+                    <td>{{ item.role }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

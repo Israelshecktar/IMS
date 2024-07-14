@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block title %}Inventory Taken Report{% endblock %}
+
+{% block content %}
+<nav class="navbar is-primary" role="navigation" aria-label="main navigation">
+    <!-- Your existing navbar code -->
+</nav>
+
+<section class="section">
+    <div class="container">
+        <h1 class="title">Inventory Taken Report</h1>
+
+        <!-- Flash messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="notification is-{{ category }}">
+                {{ message }}
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <form method="post" action="{{ url_for('inventory_taken_report') }}">
+            <div class="field">
+                <label class="label">Start Date</label>
+                <div class="control">
+                    <input class="input" type="date" name="start_date" required>
+                </div>
+            </div>
+            <div class="field">
+                <label class="label">End Date</label>
+                <div class="control">
+                    <input class="input" type="date" name="end_date" required>
+                </div>
+            </div>
+            <div class="field is-grouped">
+                <div class="control">
+                    <button class="button is-primary" type="submit" name="download" value="true">Download Report</button>
+                </div>
+                <div class="control">
+                    <a class="button is-link" href="{{ url_for('dashboard') }}">Back to Dashboard</a>
+                </div>
+            </div>
+        </form>
+
+        {% if report %}
+        <h2 class="title">Report</h2>
+        <table class="table is-fullwidth">
+            <thead>
+                <tr>
+                    <th>Inventory ID</th>
+                    <th>Product Name</th>
+                    <th>Quantity Taken</th>
+                    <th>Date Taken</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in report %}
+                <tr>
+                    <td>{{ item.inventory_id }}</td>
+                    <td>{{ item.product_name }}</td>
+                    <td>{{ item.quantity_taken }}</td>
+                    <td>{{ item.date_taken }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

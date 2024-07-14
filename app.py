@@ -1,7 +1,18 @@
-from flask import Flask, request, url_for, session, send_file, redirect, render_template, flash, jsonify
+from flask import (
+    Flask,
+    request,
+    url_for,
+    session,
+    send_file,
+    redirect,
+    render_template,
+    flash,
+    jsonify,
+)
 import io
 import pandas as pd
 from functools import wraps
+from decimal import Decimal
 from models import db, Inventory, User, InventoryTransaction
 from itsdangerous import URLSafeTimedSerializer
 from config import (
@@ -173,38 +184,51 @@ def update_profile():
 
 # inventory management routes
 # Home Route
-from decimal import Decimal
+from flask import flash
+
 
 @app.route("/add_inventory", methods=["GET", "POST"])
 def add_inventory():
     if request.method == "POST":
-        material = request.form["material"]
-        product_name = request.form["product_name"]
-        total_litres = Decimal(request.form["total_litres"])
-        date_received = request.form["date_received"]
-        best_before_date = request.form["best_before_date"]
-        location = request.form["location"]
+        try:
+            material = request.form["material"]
+            product_name = request.form["product_name"]
+            total_litres = Decimal(request.form["total_litres"])
+            date_received = request.form["date_received"]
+            best_before_date = request.form["best_before_date"]
+            location = request.form["location"]
 
-        existing_inventory = Inventory.query.filter_by(material=material).first()
-        if existing_inventory:
-            existing_inventory.total_litres += total_litres
-            existing_inventory.date_received = date_received
-            existing_inventory.best_before_date = best_before_date
-            existing_inventory.location = location
-        else:
-            new_inventory = Inventory(
-                material=material,
-                product_name=product_name,
-                total_litres=total_litres,
-                date_received=date_received,
-                best_before_date=best_before_date,
-                location=location,
-            )
-            db.session.add(new_inventory)
+            # Validate input values
+            if not material or not product_name or total_litres <= 0:
+                flash("Invalid input values. Please check your entries.", "error")
+                return redirect(url_for("add_inventory"))
 
-        db.session.commit()
-        return redirect(url_for("dashboard"))
+            existing_inventory = Inventory.query.filter_by(material=material).first()
+            if existing_inventory:
+                existing_inventory.total_litres += total_litres
+                existing_inventory.date_received = date_received
+                existing_inventory.best_before_date = best_before_date
+                existing_inventory.location = location
+            else:
+                new_inventory = Inventory(
+                    material=material,
+                    product_name=product_name,
+                    total_litres=total_litres,
+                    date_received=date_received,
+                    best_before_date=best_before_date,
+                    location=location,
+                )
+                db.session.add(new_inventory)
+
+            db.session.commit()
+            flash("Inventory added successfully!", "success")
+            return redirect(url_for("dashboard"))
+        except Exception as e:
+            db.session.rollback()
+            flash(f"An error occurred: {str(e)}", "error")
+            return redirect(url_for("add_inventory"))
     return render_template("add_inventory.html")
+
 
 @app.route("/take_inventory", methods=["GET", "POST"])
 def take_inventory():
@@ -228,10 +252,14 @@ def take_inventory():
         db.session.add(transaction)
         db.session.commit()
 
-        flash(f"Successfully took {quantity_to_take} litres. Remaining: {inventory_item.total_litres} litres", "success")
+        flash(
+            f"Successfully took {quantity_to_take} litres. Remaining: {inventory_item.total_litres} litres",
+            "success",
+        )
         return redirect(url_for("take_inventory"))
 
     return render_template("take_inventory.html")
+
 
 @app.route("/get_inventory_details", methods=["POST"])
 def get_inventory_details():
@@ -241,13 +269,22 @@ def get_inventory_details():
     if not inventory_item:
         return jsonify({"error": "Inventory item not found"}), 404
 
-    return jsonify({
-        "product_name": inventory_item.product_name,
-        "total_litres": inventory_item.total_litres,
-        "date_received": inventory_item.date_received.strftime("%Y-%m-%d"),
-        "best_before_date": inventory_item.best_before_date.strftime("%Y-%m-%d"),
-        "location": inventory_item.location
-    })
+    return jsonify(
+        {
+            "product_name": inventory_item.product_name,
+            "total_litres": inventory_item.total_litres,
+            "date_received": inventory_item.date_received.strftime("%Y-%m-%d"),
+            "best_before_date": inventory_item.best_before_date.strftime("%Y-%m-%d"),
+            "location": inventory_item.location,
+        }
+    )
+
+
+@app.route("/inventory/total", methods=["GET"])
+def get_total_inventory():
+    total_products = Inventory.query.count()
+    return jsonify(total=total_products)
+
 
 @app.route("/inventory", methods=["GET"])
 def get_inventory():
@@ -274,31 +311,69 @@ def get_inventory():
     )
 
 
-@app.route("/update_inventory/<int:id>", methods=["PUT"])
-def update_inventory(id):
-    inventory_item = Inventory.query.get(id)
-    if not inventory_item:
-        return render_template("error.html", message="Inventory item not found")
+@app.route("/get_inventory_by_material", methods=["POST"])
+def get_inventory_by_material():
+    try:
+        material_code = request.json["material"]
+        inventory_item = Inventory.query.filter_by(material=material_code).first()
 
-    inventory_item.material = request.form.get("material", inventory_item.material)
-    inventory_item.product_name = request.form.get(
-        "product_name", inventory_item.product_name
-    )
-    inventory_item.total_litres = request.form.get(
-        "total_litres", inventory_item.total_litres
-    )
-    inventory_item.date_received = request.form.get(
-        "date_received", inventory_item.date_received
-    )
-    inventory_item.best_before_date = request.form.get(
-        "best_before_date", inventory_item.best_before_date
-    )
-    inventory_item.location = request.form.get("location", inventory_item.location)
+        if not inventory_item:
+            return jsonify({"error": "Inventory item not found"}), 404
 
-    db.session.commit()
-    return render_template(
-        "update_inventory_success.html", message="Inventory item updated successfully"
-    )
+        return jsonify(
+            {
+                "id": inventory_item.id,
+                "material": inventory_item.material,
+                "product_name": inventory_item.product_name,
+                "total_litres": str(inventory_item.total_litres),
+                "date_received": inventory_item.date_received.strftime("%Y-%m-%d"),
+                "best_before_date": inventory_item.best_before_date.strftime(
+                    "%Y-%m-%d"
+                ),
+                "location": inventory_item.location,
+            }
+        )
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/update_inventory", methods=["GET", "POST"])
+def update_inventory():
+    if request.method == "POST":
+        try:
+            inventory_item_id = request.form["id"]
+            inventory_item = Inventory.query.get(inventory_item_id)
+            if not inventory_item:
+                flash("Inventory item not found", "error")
+                return redirect(url_for("update_inventory"))
+
+            # Confirmation check before updating
+            confirm = request.form.get("confirm_update")
+            if confirm != "yes":
+                flash("Update cancelled by user.", "info")
+                return redirect(url_for("update_inventory", id=inventory_item_id))
+
+            inventory_item.material = request.form["material"]
+            inventory_item.product_name = request.form["product_name"]
+            inventory_item.total_litres = Decimal(request.form["total_litres"])
+            inventory_item.date_received = request.form["date_received"]
+            inventory_item.best_before_date = request.form["best_before_date"]
+            inventory_item.location = request.form["location"]
+
+            db.session.commit()
+            flash("Inventory item updated successfully!", "success")
+        except Exception as e:
+            db.session.rollback()
+            flash(f"An error occurred: {str(e)}", "error")
+        finally:
+            return redirect(url_for("dashboard"))
+    else:
+        inventory_item_id = request.args.get("id")
+        inventory_item = (
+            Inventory.query.get(inventory_item_id) if inventory_item_id else None
+        )
+        return render_template("update_inventory.html", inventory_item=inventory_item)
+
 
 @app.route("/delete_inventory", methods=["GET", "POST"])
 def delete_inventory():
@@ -348,6 +423,7 @@ def get_inventory_below_threshold():
         )
 
     return jsonify(inventory_list)
+
 
 @app.route("/inventory/expiring_soon", methods=["GET"])
 def get_inventory_expiring_soon():
@@ -409,52 +485,53 @@ def inventory_levels_report():
     return render_template("inventory_levels_report.html", report=report)
 
 
-@app.route("/report/inventory_taken", methods=["GET"])
+@app.route("/report/inventory_taken", methods=["GET", "POST"])
 def inventory_taken_report():
-    start_date = request.args.get("start_date")
-    end_date = request.args.get("end_date")
+    if request.method == "POST":
+        start_date = request.form.get("start_date")
+        end_date = request.form.get("end_date")
 
-    if not start_date or not end_date:
-        return render_template(
-            "error.html", message="Please provide both start_date and end_date"
-        )
+        if not start_date or not end_date:
+            flash("Please provide both start date and end date", "danger")
+            return redirect(url_for("inventory_taken_report"))
 
-    try:
-        start_date = datetime.strptime(start_date, "%Y-%m-%d")
-        end_date = datetime.strptime(end_date, "%Y-%m-%d")
-    except ValueError:
-        return render_template(
-            "error.html", message="Invalid date format. Use YYYY-MM-DD"
-        )
+        try:
+            start_date = datetime.strptime(start_date, "%Y-%m-%d")
+            end_date = datetime.strptime(end_date, "%Y-%m-%d")
+        except ValueError:
+            flash("Invalid date format. Use YYYY-MM-DD", "danger")
+            return redirect(url_for("inventory_taken_report"))
 
-    transactions = InventoryTransaction.query.filter(
-        InventoryTransaction.date_taken >= start_date,
-        InventoryTransaction.date_taken <= end_date,
-    ).all()
+        transactions = InventoryTransaction.query.filter(
+            InventoryTransaction.date_taken >= start_date,
+            InventoryTransaction.date_taken <= end_date,
+        ).all()
 
-    report = [
-        {
-            "inventory_id": transaction.inventory_id,
-            "product_name": transaction.inventory.product_name,
-            "quantity_taken": transaction.quantity_taken,
-            "date_taken": transaction.date_taken.isoformat(),
-        }
-        for transaction in transactions
-    ]
+        report = [
+            {
+                "inventory_id": transaction.inventory_id,
+                "product_name": transaction.inventory.product_name,
+                "quantity_taken": transaction.quantity_taken,
+                "date_taken": transaction.date_taken.isoformat(),
+            }
+            for transaction in transactions
+        ]
 
-    if request.args.get("download") == "true":
-        df = pd.DataFrame(report)
-        output = io.BytesIO()
-        with pd.ExcelWriter(output, engine="openpyxl") as writer:
-            df.to_excel(writer, index=False, sheet_name="Inventory Taken")
-        output.seek(0)
-        return send_file(
-            output,
-            as_attachment=True,
-            download_name="inventory_taken_report.xlsx",
-        )
+        if request.form.get("download") == "true":
+            df = pd.DataFrame(report)
+            output = io.BytesIO()
+            with pd.ExcelWriter(output, engine="openpyxl") as writer:
+                df.to_excel(writer, index=False, sheet_name="Inventory Taken")
+            output.seek(0)
+            return send_file(
+                output,
+                as_attachment=True,
+                download_name="inventory_taken_report.xlsx",
+            )
 
-    return render_template("inventory_taken_report.html", report=report)
+        return render_template("inventory_taken_report.html", report=report)
+
+    return render_template("inventory_taken_report.html")
 
 
 @app.route("/report/user_activity", methods=["GET"])
@@ -465,10 +542,23 @@ def user_activity_report():
             "username": user.username,
             "email": user.email,
             "role": user.role,
-            "last_login": user.last_login.isoformat() if user.last_login else None,
+            # Removed the 'last_login' attribute since it does not exist in the User model
         }
         for user in users
     ]
+
+    if request.args.get("download") == "true":
+        df = pd.DataFrame(report)
+        output = io.BytesIO()
+        with pd.ExcelWriter(output, engine="openpyxl") as writer:
+            df.to_excel(writer, index=False, sheet_name="User Activity")
+        output.seek(0)
+        return send_file(
+            output,
+            as_attachment=True,
+            download_name="user_activity_report.xlsx",
+        )
+
     return render_template("user_activity_report.html", report=report)
 
 
