@@ -39,3 +39,15 @@ class InventoryTransaction(db.Model):
     inventory = db.relationship(
         "Inventory", backref=db.backref("transactions", lazy=True)
     )
+
+
+class DeletedInventory(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    original_id = db.Column(db.Integer, nullable=False)
+    material = db.Column(db.Numeric(15), nullable=False)
+    product_name = db.Column(db.String(255), nullable=False)
+    total_litres = db.Column(db.Numeric(10, 2), nullable=False)
+    date_received = db.Column(db.Date, nullable=False)
+    best_before_date = db.Column(db.Date, nullable=False)
+    location = db.Column(db.String(255), nullable=False)
+    date_deleted = db.Column(db.DateTime, default=datetime.utcnow)

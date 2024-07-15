@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}Deleted Inventory{% endblock %}
+
+{% block content %}
+<section class="section">
+    <div class="container">
+        <div class="level">
+            <div class="level-left">
+                <h1 class="title">Deleted Inventory Items</h1>
+            </div>
+            <div class="level-right">
+                <a class="button is-primary" href="/dashboard">Back to Dashboard</a>
+            </div>
+        </div>
+        <div class="table-container">
+            <table class="table is-fullwidth is-striped">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Material</th>
+                        <th>Product Name</th>
+                        <th>Total Litres</th>
+                        <th>Date Received</th>
+                        <th>Best Before Date</th>
+                        <th>Location</th>
+                        <th>Date Deleted</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in items %}
+                    <tr>
+                        <td>{{ item.original_id }}</td>
+                        <td>{{ item.material }}</td>
+                        <td>{{ item.product_name }}</td>
+                        <td>{{ item.total_litres }}</td>
+                        <td>{{ item.date_received }}</td>
+                        <td>{{ item.best_before_date }}</td>
+                        <td>{{ item.location }}</td>
+                        <td>{{ item.date_deleted }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -28,33 +28,32 @@
             </div>
         </div>
 
-            <div class="navbar-item">
-                <div class="dropdown is-right is-hoverable is-mobile custom-dropdown">
-                    <div class="dropdown-trigger">
-                        <button class="button is-primary" aria-haspopup="true" aria-controls="dropdown-menu">
-                            <span class="icon is-small">
-                                <i class="fas fa-user" aria-hidden="true"></i>
-                            </span>
-                            <span class="icon is-small">
-                                <i class="fas fa-angle-down" aria-hidden="true"></i>
-                            </span>
-                        </button>
-                    </div>
-                    <div class="dropdown-menu" id="dropdown-menu" role="menu">
-                        <div class="dropdown-content">
-                            <a href="/update_profile" id="updateProfile" class="dropdown-item is-primary">Update Profile</a>
-                            <a href="/logout" id="logoutButton" class="dropdown-item is-primary">Logout</a>
-                        </div>
+        <div class="navbar-item">
+            <div class="dropdown is-right is-hoverable is-mobile custom-dropdown">
+                <div class="dropdown-trigger">
+                    <button class="button is-primary" aria-haspopup="true" aria-controls="dropdown-menu">
+                        <span class="icon is-small">
+                            <i class="fas fa-user" aria-hidden="true"></i>
+                        </span>
+                        <span class="icon is-small">
+                            <i class="fas fa-angle-down" aria-hidden="true"></i>
+                        </span>
+                    </button>
+                </div>
+                <div class="dropdown-menu" id="dropdown-menu" role="menu">
+                    <div class="dropdown-content">
+                        <a href="/update_profile" id="updateProfile" class="dropdown-item is-primary">Update Profile</a>
+                        <a href="/logout" id="logoutButton" class="dropdown-item is-primary">Logout</a>
                     </div>
                 </div>
             </div>
-            <div class="navbar-item">
-                <button class="button is-primary">
-                    <span class="icon is-small">
-                        <i class="fas fa-bell"></i>
-                    </span>
-                </button>
-            </div>
+        </div>
+        <div class="navbar-item">
+            <button class="button is-primary">
+                <span class="icon is-small">
+                    <i class="fas fa-bell"></i>
+                </span>
+            </button>
         </div>
     </div>
 </nav>
@@ -96,8 +95,8 @@
                         <div class="content">
                             <p>Pending Tasks: 5</p>
                             <ul>
-                            <li><a class="has-text-primary" href="/take_inventory" id="takeInventory">Take Inventory</a></li>
-                            <li></li><a class="has-text-primary" href="/update_inventory">Update Inventory</a></li>
+                                <li><a class="has-text-primary" href="/take_inventory" id="takeInventory">Take Inventory</a></li>
+                                <li><a class="has-text-primary" href="/update_inventory">Update Inventory</a></li>
                             </ul>
                         </div>
                     </div>
@@ -137,7 +136,11 @@
                     <div class="card-content">
                         <div class="content">
                             <p>Items to Delete: 2</p>
+                            <ul>
                             <a class="has-text-primary" href="/delete_inventory" id="deleteInventory">Delete Inventory</a>
+                            <br>
+                            <a class="has-text-primary" href="/deleted_inventory" id="viewDeletedInventory">View Deleted Inventory</a>
+                        </ul>
                         </div>
                     </div>
                 </div>
@@ -164,6 +167,7 @@
         </div>
     </div>
 </section>
+
 <footer class="footer has-background-primary" style="padding: 1rem 1.5rem;">
     <div class="content has-text-centered has-text-white">
         <p>

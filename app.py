@@ -13,7 +13,7 @@ import io
 import pandas as pd
 from functools import wraps
 from decimal import Decimal
-from models import db, Inventory, User, InventoryTransaction
+from models import db, Inventory, User, InventoryTransaction, DeletedInventory
 from itsdangerous import URLSafeTimedSerializer
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
@@ -392,13 +392,40 @@ def delete_inventory():
             flash("Inventory item not found", "danger")
             return redirect(url_for("delete_inventory"))
 
+        # Check for related transactions
+        related_transactions = InventoryTransaction.query.filter_by(
+            inventory_id=inventory_item.id
+        ).all()
+        if related_transactions:
+            flash("Cannot delete inventory item with related transactions", "danger")
+            return redirect(url_for("delete_inventory"))
+
+        # Store deleted inventory details
+        deleted_inventory = DeletedInventory(
+            original_id=inventory_item.id,
+            material=inventory_item.material,
+            product_name=inventory_item.product_name,
+            total_litres=inventory_item.total_litres,
+            date_received=inventory_item.date_received,
+            best_before_date=inventory_item.best_before_date,
+            location=inventory_item.location,
+        )
+        db.session.add(deleted_inventory)
+
+        # Delete the inventory item
         db.session.delete(inventory_item)
         db.session.commit()
-        flash("Inventory item deleted successfully", "success")
+        flash("Inventory item deleted successfully and details stored", "success")
         return redirect(url_for("delete_inventory"))
 
     inventory_items = Inventory.query.all()
     return render_template("delete_inventory.html", items=inventory_items)
+
+
+@app.route("/deleted_inventory", methods=["GET"])
+def view_deleted_inventory():
+    deleted_items = DeletedInventory.query.all()
+    return render_template("deleted_inventory.html", items=deleted_items)
 
 
 @app.route("/inventory/below_threshold", methods=["GET"])
