@@ -199,7 +199,9 @@ def view_full_inventory():
 def add_inventory():
     if request.method == "POST":
         try:
-            material = request.form["material"]
+            material = request.form[
+                "material"
+            ].strip()  # Remove any leading/trailing whitespace
             product_name = request.form["product_name"]
             total_litres = Decimal(request.form["total_litres"])
             date_received = request.form["date_received"]
