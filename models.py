@@ -31,6 +31,7 @@ class Inventory(db.Model):
     location = db.Column(db.String(255), nullable=False)
 
 
+# define inventory transaction model
 class InventoryTransaction(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     inventory_id = db.Column(db.Integer, db.ForeignKey("inventory.id"), nullable=False)
@@ -41,6 +42,7 @@ class InventoryTransaction(db.Model):
     )
 
 
+# define deleted inventory model
 class DeletedInventory(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     original_id = db.Column(db.Integer, nullable=False)

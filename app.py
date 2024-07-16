@@ -217,8 +217,10 @@ def update_profile():
     return render_template("update_profile.html", user=user)
 
 
+# Routes for Inventory Management
 # Route to view full inventory
 @app.route("/view_full_inventory", methods=["GET"])
+@login_required
 def view_full_inventory():
     # Query all inventory items
     inventory_items = Inventory.query.all()
@@ -228,6 +230,7 @@ def view_full_inventory():
 
 # Route to add inventory
 @app.route("/add_inventory", methods=["GET", "POST"])
+@login_required
 def add_inventory():
     if request.method == "POST":
         try:
@@ -281,6 +284,7 @@ def add_inventory():
 
 # Route to take inventory
 @app.route("/take_inventory", methods=["GET", "POST"])
+@login_required
 def take_inventory():
     if request.method == "POST":
         # Get material code and quantity to take from the form
@@ -318,6 +322,7 @@ def take_inventory():
 
 # Route to get inventory details by material code
 @app.route("/get_inventory_details", methods=["POST"])
+@login_required
 def get_inventory_details():
     # Get material code from the form
     material_code = request.form["material"]
@@ -341,6 +346,7 @@ def get_inventory_details():
 
 # Route to get total inventory count
 @app.route("/inventory/total", methods=["GET"])
+@login_required
 def get_total_inventory():
     total_products = Inventory.query.count()
     return jsonify(total=total_products)
@@ -348,6 +354,7 @@ def get_total_inventory():
 
 # Route to get inventory with filtering and pagination
 @app.route("/inventory", methods=["GET"])
+@login_required
 def get_inventory():
     query = Inventory.query
     material = request.args.get("material")
@@ -377,6 +384,7 @@ def get_inventory():
 
 # Route to get inventory details by material code (JSON)
 @app.route("/get_inventory_by_material", methods=["POST"])
+@login_required
 def get_inventory_by_material():
     try:
         # Get material code from the JSON request
@@ -408,6 +416,7 @@ def get_inventory_by_material():
 
 # Route to update inventory
 @app.route("/update_inventory", methods=["GET", "POST"])
+@login_required
 def update_inventory():
     if request.method == "POST":
         try:
@@ -453,6 +462,7 @@ def update_inventory():
 
 # Route to delete inventory item
 @app.route("/delete_inventory", methods=["GET", "POST"])
+@login_required
 def delete_inventory():
     if request.method == "POST":
         # Get the ID of the item to be deleted
@@ -496,6 +506,7 @@ def delete_inventory():
 
 # Route to view deleted inventory items
 @app.route("/deleted_inventory", methods=["GET"])
+@login_required
 def view_deleted_inventory():
     # Get all deleted inventory items
     deleted_items = DeletedInventory.query.all()
@@ -544,6 +555,7 @@ def get_inventory_below_threshold():
 
 # Route to get inventory items expiring soon
 @app.route("/inventory/expiring_soon", methods=["GET"])
+@login_required
 def get_inventory_expiring_soon():
     # Calculate the date three months from now
     three_months_from_now = datetime.now() + timedelta(days=90)
@@ -585,10 +597,9 @@ def get_inventory_expiring_soon():
 
 
 # Reporting and Analytics Routes
-
-
 # Route to generate inventory levels report
 @app.route("/report/inventory_levels", methods=["GET"])
+@login_required
 def inventory_levels_report():
     # Query all inventory items
     inventory_items = Inventory.query.all()
@@ -621,6 +632,7 @@ def inventory_levels_report():
 
 # Route to generate inventory taken report
 @app.route("/report/inventory_taken", methods=["GET", "POST"])
+@login_required
 def inventory_taken_report():
     if request.method == "POST":
         # Get start and end dates from the form
