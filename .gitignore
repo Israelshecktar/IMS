@@ -162,8 +162,4 @@ cython_debug/
 #.idea/
 
 # utility scripts
-categories.py
-config.py
-hempel.csv
-check_data.py
-inventory.py
+
