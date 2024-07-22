@@ -23,7 +23,11 @@
                 <div class="control">
                     <button class="button is-primary" type="submit">Login</button>
                 </div>
-                <div class="notification is-danger is-hidden" id="loginError"></div>
+                {% if error %}
+                <div class="notification is-danger">
+                    {{ error }}
+                </div>
+                {% endif %}
             </form>
             <p class="mt-4">Don't have an account yet? <a href="#" id="showRegisterForm">Register</a></p>
         </div>

@@ -78,6 +78,7 @@ def login():
     return render_template("index.html")
 
 
+
 # Route for dashboard, accessible only after login
 @app.route("/dashboard")
 @login_required
