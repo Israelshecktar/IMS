@@ -167,3 +167,4 @@ config.py
 hempel.csv
 check_data.py
 inventory.py
+config_test.py
